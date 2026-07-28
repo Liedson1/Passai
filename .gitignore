@@ -1,0 +1,19 @@
+# Ambiente virtual
+venv/
+env/
+ENV/
+
+# Cache e arquivos compilados do Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Arquivos de configuração e credenciais
+.env
+*.env
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
