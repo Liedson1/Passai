@@ -13,7 +13,8 @@ class AppColors {
   static const Color secondaryLight = Color(0xFFE6F3F5);
 
   // Superfícies e fundo
-  static const Color background = Color(0xFFF0EAE1);
+  static const Color background = Color(0xFFF9F6F0);     // fundo geral da tela
+  static const Color inputBackground = Color(0xFFF0EAE1); // fundo dos inputs
   static const Color surface = Color(0xFFFFFFFF);
   static const Color border = Color(0xFFEADFD5);
 

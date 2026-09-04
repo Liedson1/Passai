@@ -8,6 +8,8 @@ import 'core/network/supabase_client.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'domain/entities/rota.dart';
+import 'presentation/pages/auth/sign_in_page.dart';
+import 'presentation/pages/auth/sign_up_page.dart';
 import 'presentation/pages/home/home_page.dart';
 import 'presentation/pages/horarios/horarios_page.dart';
 
@@ -38,11 +40,19 @@ void main() async {
 
 /// Configuração das rotas do GoRouter
 final _router = GoRouter(
-  initialLocation: AppRoutes.home,
+  initialLocation: AppRoutes.signIn,
   routes: [
     GoRoute(
       path: AppRoutes.home,
       builder: (context, state) => const HomePage(),
+    ),
+    GoRoute(
+      path: AppRoutes.signIn,
+      builder: (context, state) => const SignInPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.signUp,
+      builder: (context, state) => const SignUpPage(),
     ),
     GoRoute(
       path: AppRoutes.horarios,
