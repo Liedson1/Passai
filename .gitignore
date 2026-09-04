@@ -14,6 +14,24 @@ __pycache__/
 .env
 *.env
 
+# IDEs e Editores
+.idea/
+*.iml
+.vscode/
+
 # Arquivos do sistema operacional
 .DS_Store
 Thumbs.db
+
+# Arquivos locais e temporários
+implementation_plan.md
+walkthrough.md
+
+# Configurações de IA, Agentes e Skills
+AGENTS.md
+CLAUDE.md
+.agents/
+skills/
+.gemini/
+
+
