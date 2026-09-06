@@ -455,45 +455,50 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
 
                       // Lista de Cards de Rotas Populares
                       ..._destaquesDesktop.map((destaque) {
+                        // Localiza rota no banco considerando origem, destino e via se especificada
+                        Rota? rotaEncontrada = todasRotas.where((r) {
+                          final matchOrig = r.origem.toLowerCase().contains(destaque.origem.toLowerCase());
+                          final matchDest = r.destino.toLowerCase().contains(destaque.destino.toLowerCase());
+                          final matchVia = destaque.via == null || r.linha.toLowerCase().contains(destaque.via!.toLowerCase());
+                          return matchOrig && matchDest && matchVia;
+                        }).firstOrNull;
+
+                        Sentido sentido = Sentido.ida;
+                        if (rotaEncontrada == null) {
+                          rotaEncontrada = todasRotas.where((r) {
+                            final matchOrig = r.origem.toLowerCase().contains(destaque.destino.toLowerCase());
+                            final matchDest = r.destino.toLowerCase().contains(destaque.origem.toLowerCase());
+                            final matchVia = destaque.via == null || r.linha.toLowerCase().contains(destaque.via!.toLowerCase());
+                            return matchOrig && matchDest && matchVia;
+                          }).firstOrNull;
+                          if (rotaEncontrada != null) {
+                            sentido = Sentido.volta;
+                          }
+                        }
+
+                        final rotaFinal = rotaEncontrada ??
+                            Rota(
+                              id: destaque.fallbackId,
+                              linha: '${destaque.origem} - ${destaque.destino}${destaque.via != null ? ' (${destaque.via})' : ''}',
+                              origem: destaque.origem,
+                              destino: destaque.destino,
+                              diasOperacao: 'Diariamente',
+                            );
+
+                        final tarifa = rotaFinal.tarifa;
+                        final precoFormatado = tarifa != null
+                            ? 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}'
+                            : destaque.preco;
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _DesktopRouteCard(
                             origem: destaque.origem,
                             destino: destaque.destino,
                             via: destaque.via,
-                            preco: destaque.preco,
+                            preco: precoFormatado,
                             horarioSaida: destaque.horarioSaida,
                             onTap: () {
-                              // Localiza rota no banco considerando origem, destino e via se especificada
-                              Rota? rotaEncontrada = todasRotas.where((r) {
-                                final matchOrig = r.origem.toLowerCase().contains(destaque.origem.toLowerCase());
-                                final matchDest = r.destino.toLowerCase().contains(destaque.destino.toLowerCase());
-                                final matchVia = destaque.via == null || r.linha.toLowerCase().contains(destaque.via!.toLowerCase());
-                                return matchOrig && matchDest && matchVia;
-                              }).firstOrNull;
-
-                              Sentido sentido = Sentido.ida;
-                              if (rotaEncontrada == null) {
-                                rotaEncontrada = todasRotas.where((r) {
-                                  final matchOrig = r.origem.toLowerCase().contains(destaque.destino.toLowerCase());
-                                  final matchDest = r.destino.toLowerCase().contains(destaque.origem.toLowerCase());
-                                  final matchVia = destaque.via == null || r.linha.toLowerCase().contains(destaque.via!.toLowerCase());
-                                  return matchOrig && matchDest && matchVia;
-                                }).firstOrNull;
-                                if (rotaEncontrada != null) {
-                                  sentido = Sentido.volta;
-                                }
-                              }
-
-                              final rotaFinal = rotaEncontrada ??
-                                  Rota(
-                                    id: destaque.fallbackId,
-                                    linha: '${destaque.origem} - ${destaque.destino}${destaque.via != null ? ' (${destaque.via})' : ''}',
-                                    origem: destaque.origem,
-                                    destino: destaque.destino,
-                                    diasOperacao: 'Diariamente',
-                                  );
-
                               context.push(
                                 AppRoutes.resultados,
                                 extra: ResultadosArgs(
