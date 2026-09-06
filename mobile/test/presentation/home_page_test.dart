@@ -284,5 +284,34 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('Deve exibir seção de marketing Por que o Passaí e selos de confiança',
+        (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            rotasRepositoryProvider
+                .overrideWithValue(FakeHomeRotasRepository()),
+          ],
+          child: const MaterialApp(
+            home: HomePage(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Verifica presença dos selos de confiança
+      expect(find.text('100% gratuito e sem cadastro'), findsAtLeastNWidgets(1));
+      expect(find.text('Horários do dia atualizados'), findsAtLeastNWidgets(1));
+      expect(find.text('Tarifas oficiais de Alagoas'), findsAtLeastNWidgets(1));
+
+      // Verifica presença da seção Por Que o Passaí
+      expect(find.text('POR QUE O PASSAÍ?'), findsOneWidget);
+      expect(find.text('Chega de esperar van que não vem'), findsOneWidget);
+      expect(find.text('Preço certo antes de sair de casa'), findsOneWidget);
+      expect(find.text('Direto ao ponto, sem login'), findsOneWidget);
+      expect(find.text('Tudo em um único lugar'), findsOneWidget);
+    });
   });
 }

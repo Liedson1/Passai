@@ -14,6 +14,7 @@ import 'package:passai/presentation/widgets/responsive_shell.dart';
 import 'package:passai/presentation/widgets/common/passai_logo.dart';
 import 'package:passai/presentation/widgets/web/pwa_install_banner.dart';
 import 'widgets/home_desktop_view.dart';
+import 'widgets/why_passai_section.dart';
 
 /// Tela principal do Passaí — consulta de horários de vans
 class HomePage extends ConsumerWidget {
@@ -207,8 +208,35 @@ class _BodyContent extends ConsumerWidget {
             ),
           const PwaInstallBanner(),
           const _SearchCard(),
+          const SizedBox(height: 16),
+          const SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                HeroTrustBadge(
+                  icon: Icons.check_circle_outline_rounded,
+                  label: '100% gratuito e sem cadastro',
+                  isLight: false,
+                ),
+                SizedBox(width: 8),
+                HeroTrustBadge(
+                  icon: Icons.update_rounded,
+                  label: 'Horários do dia atualizados',
+                  isLight: false,
+                ),
+                SizedBox(width: 8),
+                HeroTrustBadge(
+                  icon: Icons.payments_outlined,
+                  label: 'Tarifas oficiais de Alagoas',
+                  isLight: false,
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
           const _RotasPopularesSection(),
+          const SizedBox(height: 24),
+          const WhyPassaiSection(isDesktop: false),
         ],
       ),
     );

@@ -10,6 +10,7 @@ import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/web/web_footer.dart';
 import 'package:passai/presentation/widgets/web/web_navbar.dart';
+import 'why_passai_section.dart';
 
 /// Configuração de uma rota em destaque na Home Desktop
 class _DesktopRotaDestaque {
@@ -417,6 +418,29 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                           ],
                         ),
                       ),
+
+                      const SizedBox(height: 24),
+
+                      // Selos de Confiança (Hero Trust Badges)
+                      const Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 16,
+                        runSpacing: 10,
+                        children: [
+                          HeroTrustBadge(
+                            icon: Icons.check_circle_outline_rounded,
+                            label: '100% gratuito e sem cadastro',
+                          ),
+                          HeroTrustBadge(
+                            icon: Icons.update_rounded,
+                            label: 'Horários do dia atualizados',
+                          ),
+                          HeroTrustBadge(
+                            icon: Icons.payments_outlined,
+                            label: 'Tarifas oficiais de Alagoas',
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -516,7 +540,10 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
               ),
             ),
 
-            // 4. Rodapé Escuro Institucional
+            // 4. Seção Por Que o Passaí (Dores, Benefícios e Público-alvo)
+            const WhyPassaiSection(isDesktop: true),
+
+            // 5. Rodapé Escuro Institucional
             const WebFooter(),
           ],
         ),
