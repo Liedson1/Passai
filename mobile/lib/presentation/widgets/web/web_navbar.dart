@@ -4,15 +4,21 @@ import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/presentation/widgets/common/passai_logo.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:passai/presentation/providers/pwa_provider.dart';
+import 'package:passai/presentation/widgets/web/pwa_install_modal.dart';
+
 /// Barra de navegação superior para a versão Desktop Web do Passaí
-class WebNavbar extends StatelessWidget implements PreferredSizeWidget {
+class WebNavbar extends ConsumerWidget implements PreferredSizeWidget {
   const WebNavbar({super.key});
 
   @override
   Size get preferredSize => const Size.fromHeight(68);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pwaState = ref.watch(pwaProvider);
+
     return Container(
       height: 68,
       width: double.infinity,
@@ -47,6 +53,34 @@ class WebNavbar extends StatelessWidget implements PreferredSizeWidget {
                       title: 'Rotas e Horários',
                       onTap: () => context.go(AppRoutes.home),
                     ),
+                    if ((pwaState.canInstall || pwaState.isIos) &&
+                        !pwaState.isStandalone &&
+                        !pwaState.isInstalled) ...[
+                      const SizedBox(width: 20),
+                      ElevatedButton.icon(
+                        onPressed: () => showPwaInstallFlow(context, ref),
+                        icon: const Icon(Icons.download_rounded, size: 16),
+                        label: const Text(
+                          'Instalar App',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primary,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],

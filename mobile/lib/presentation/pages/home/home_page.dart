@@ -12,6 +12,7 @@ import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/popular_route_card.dart';
 import 'package:passai/presentation/widgets/responsive_shell.dart';
 import 'package:passai/presentation/widgets/common/passai_logo.dart';
+import 'package:passai/presentation/widgets/web/pwa_install_banner.dart';
 import 'widgets/home_desktop_view.dart';
 
 /// Tela principal do Passaí — consulta de horários de vans
@@ -204,6 +205,7 @@ class _BodyContent extends ConsumerWidget {
                 ),
               ),
             ),
+          const PwaInstallBanner(),
           const _SearchCard(),
           const SizedBox(height: 24),
           const _RotasPopularesSection(),

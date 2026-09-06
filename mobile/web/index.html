@@ -22,9 +22,12 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Passaí">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icons/Icon-512.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
@@ -163,6 +166,73 @@
       setTimeout(function () {
         removeSplashScreen();
       }, 3500);
+    });
+
+    // ============================================================
+    // Passaí PWA Controller & Native Install Interop
+    // ============================================================
+    window.passaiPwa = {
+      deferredPrompt: null,
+      isInstalled: false,
+      canInstall: false,
+
+      promptInstall: function() {
+        if (!this.deferredPrompt) {
+          return Promise.resolve(false);
+        }
+        var promptEvent = this.deferredPrompt;
+        this.deferredPrompt = null;
+        this.canInstall = false;
+        this._notifyState();
+
+        return promptEvent.prompt().then(function() {
+          return promptEvent.userChoice;
+        }).then(function(choice) {
+          return choice && choice.outcome === 'accepted';
+        }).catch(function() {
+          return false;
+        });
+      },
+
+      checkIsStandalone: function() {
+        return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+               (window.navigator && window.navigator.standalone === true) ||
+               (document.referrer && document.referrer.includes('android-app://'));
+      },
+
+      checkIsIos: function() {
+        var ua = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(ua);
+      },
+
+      _notifyState: function() {
+        window.dispatchEvent(new CustomEvent('passai-pwa-update', {
+          detail: {
+            canInstall: this.canInstall,
+            isInstalled: this.isInstalled,
+            isStandalone: this.checkIsStandalone(),
+            isIos: this.checkIsIos()
+          }
+        }));
+      }
+    };
+
+    window.passaiPwa.isInstalled = window.passaiPwa.checkIsStandalone();
+
+    // Captura o evento nativo beforeinstallprompt
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      window.passaiPwa.deferredPrompt = e;
+      window.passaiPwa.canInstall = true;
+      window.passaiPwa._notifyState();
+    });
+
+    // Detecta instalação concluída
+    window.addEventListener('appinstalled', function() {
+      window.passaiPwa.deferredPrompt = null;
+      window.passaiPwa.canInstall = false;
+      window.passaiPwa.isInstalled = true;
+      window.passaiPwa._notifyState();
     });
   </script>
   <script src="flutter_bootstrap.js" async></script>
