@@ -28,6 +28,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _telefoneController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _senhaVisivel = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -40,6 +41,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
 
   /// Delega o cadastro ao [SignUpNotifier] — zero lógica aqui.
   Future<void> _onCriarConta() async {
+    setState(() => _errorMessage = null);
     await ref.read(signUpNotifierProvider.notifier).cadastro(
           nome: _nomeController.text,
           email: _emailController.text,
@@ -63,13 +65,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         final mensagem = erro is AuthException
             ? erro.mensagem
             : 'Ocorreu um erro inesperado.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(mensagem),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        setState(() => _errorMessage = mensagem);
       },
     );
   }
@@ -98,6 +94,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               senhaController: _senhaController,
               senhaVisivel: _senhaVisivel,
               isLoading: isLoading,
+              errorMessage: _errorMessage,
               onToggleSenha: () =>
                   setState(() => _senhaVisivel = !_senhaVisivel),
               onCriarConta: _onCriarConta,
@@ -125,6 +122,7 @@ class _RegisterCard extends StatelessWidget {
     required this.senhaController,
     required this.senhaVisivel,
     required this.isLoading,
+    this.errorMessage,
     required this.onToggleSenha,
     required this.onCriarConta,
   });
@@ -135,6 +133,7 @@ class _RegisterCard extends StatelessWidget {
   final TextEditingController senhaController;
   final bool senhaVisivel;
   final bool isLoading;
+  final String? errorMessage;
   final VoidCallback onToggleSenha;
   final VoidCallback onCriarConta;
 
@@ -154,6 +153,35 @@ class _RegisterCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (errorMessage != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(AppRadii.input),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline,
+                          color: AppColors.primary, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          errorMessage!,
+                          style: AppTextStyles.bodyMedium(
+                            fontSize: 13,
+                            color: AppColors.primaryDark,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               AuthInputField(
                 label: 'NOME COMPLETO',
                 placeholder: 'Ex: Maria Silva',

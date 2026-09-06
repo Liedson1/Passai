@@ -1,4 +1,4 @@
-package com.example.passai
+package br.com.passai.app
 
 import io.flutter.embedding.android.FlutterActivity
 

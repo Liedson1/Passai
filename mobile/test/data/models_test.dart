@@ -119,5 +119,41 @@ void main() {
       final entity = model.toEntity();
       expect(entity.alterado, isFalse);
     });
+
+    test('RotaModel.fromJson mapeia seccionamentos e trata distancia_km decimal', () {
+      final json = {
+        'id': 3,
+        'linha': 'Água Branca - Maceió',
+        'distancia_km': 306.0,
+        'tarifa': 54.50,
+        'seccionamentos': 'Passando por São José da Tapera',
+        'origem': {'nome': 'Água Branca'},
+        'destino': {'nome': 'Maceió'},
+      };
+
+      final model = RotaModel.fromJson(json);
+      expect(model.linha, 'Água Branca - Maceió');
+      expect(model.distanciaKm, 306);
+      expect(model.tarifa, 54.50);
+      expect(model.seccionamentos, 'Passando por São José da Tapera');
+
+      final entity = model.toEntity();
+      expect(entity.seccionamentos, 'Passando por São José da Tapera');
+    });
+
+    test('HorarioModel.fromJson mapeia dias_funcionamento corretamente', () {
+      final json = {
+        'id': 15,
+        'hora': '14:30:00',
+        'sentido': 'IDA',
+        'dias_funcionamento': 'Segunda a Sexta',
+      };
+
+      final model = HorarioModel.fromJson(json);
+      expect(model.diasFuncionamento, 'Segunda a Sexta');
+
+      final entity = model.toEntity();
+      expect(entity.diasFuncionamento, 'Segunda a Sexta');
+    });
   });
 }

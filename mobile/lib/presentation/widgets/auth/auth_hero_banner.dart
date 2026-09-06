@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
+import 'package:passai/presentation/widgets/common/passai_logo.dart';
 
 /// Hero banner vermelho reutilizável nas telas de autenticação.
 /// Exibe a logo do Passaí, título e subtítulo configuráveis.
@@ -56,18 +56,8 @@ class AuthHeroBanner extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // Logo
-          Row(
-            children: [
-              const Icon(Icons.directions_bus,
-                  color: AppColors.textOnPrimary, size: 26),
-              const SizedBox(width: 8),
-              Text(
-                AppConstants.appName,
-                style: AppTextStyles.headingXL(color: AppColors.textOnPrimary),
-              ),
-            ],
-          ),
+          // Logo Oficial Horizontal SVG
+          const PassaiLogo.horizontal(height: 38),
 
           const SizedBox(height: 16),
 

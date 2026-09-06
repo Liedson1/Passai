@@ -50,5 +50,54 @@ void main() {
       expect(rota.distanciaKm, 64);
       expect(rota.tarifa, 12.00);
     });
+
+    test('Horario.operaNoDia deve filtrar corretamente por dia da semana (RN10)', () {
+      // 2026-09-07 é uma Segunda-feira (weekday = 1)
+      final segunda = DateTime(2026, 9, 7);
+      // 2026-09-12 é um Sábado (weekday = 6)
+      final sabado = DateTime(2026, 9, 12);
+      // 2026-09-13 é um Domingo (weekday = 7)
+      final domingo = DateTime(2026, 9, 13);
+
+      const hDiario = Horario(
+        id: 1,
+        hora: '07:00',
+        sentido: Sentido.ida,
+        diasFuncionamento: 'Diariamente (Segunda a Domingo)',
+      );
+      expect(hDiario.operaNoDia(segunda), isTrue);
+      expect(hDiario.operaNoDia(sabado), isTrue);
+      expect(hDiario.operaNoDia(domingo), isTrue);
+
+      const hSegSex = Horario(
+        id: 2,
+        hora: '08:00',
+        sentido: Sentido.ida,
+        diasFuncionamento: 'Segunda a Sexta',
+      );
+      expect(hSegSex.operaNoDia(segunda), isTrue);
+      expect(hSegSex.operaNoDia(sabado), isFalse);
+      expect(hSegSex.operaNoDia(domingo), isFalse);
+
+      const hSabado = Horario(
+        id: 3,
+        hora: '09:00',
+        sentido: Sentido.ida,
+        diasFuncionamento: 'Sábado',
+      );
+      expect(hSabado.operaNoDia(segunda), isFalse);
+      expect(hSabado.operaNoDia(sabado), isTrue);
+      expect(hSabado.operaNoDia(domingo), isFalse);
+
+      const hDomingo = Horario(
+        id: 4,
+        hora: '10:00',
+        sentido: Sentido.ida,
+        diasFuncionamento: 'Domingo',
+      );
+      expect(hDomingo.operaNoDia(segunda), isFalse);
+      expect(hDomingo.operaNoDia(sabado), isFalse);
+      expect(hDomingo.operaNoDia(domingo), isTrue);
+    });
   });
 }

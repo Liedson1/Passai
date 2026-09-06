@@ -3,6 +3,7 @@ import 'package:passai/domain/entities/horario.dart';
 import 'package:passai/domain/entities/rota.dart';
 import 'package:passai/domain/repositories/rotas_repository.dart';
 import 'package:passai/domain/usecases/buscar_horarios.dart';
+import 'package:passai/domain/usecases/buscar_horarios_por_data.dart';
 import 'package:passai/domain/usecases/buscar_rotas.dart';
 
 class MockRotasRepository implements RotasRepository {
@@ -32,12 +33,19 @@ class MockRotasRepository implements RotasRepository {
   Future<List<Rota>> buscarTodasAsRotas() async => rotasFixture;
 
   @override
-  Future<List<String>> buscarCidades() async => ['Água Branca', 'Delmiro Gouveia', 'Maceió'];
+  Future<List<String>> buscarCidades({String? termo}) async => ['Água Branca', 'Delmiro Gouveia', 'Maceió'];
 
   @override
   Future<List<Horario>> buscarHorarios({
     required int rotaId,
     required Sentido sentido,
+  }) async => horariosFixture;
+
+  @override
+  Future<List<Horario>> buscarHorariosPorData({
+    required int rotaId,
+    required Sentido sentido,
+    required DateTime data,
   }) async => horariosFixture;
 }
 
@@ -59,6 +67,18 @@ void main() {
 
       expect(resultado.length, 1);
       expect(resultado.first.id, 1);
+    });
+
+    test('BuscarRotas deve encontrar rotas mesmo sem acentos digitados pelo usuário', () async {
+      final useCase = BuscarRotas(repository);
+
+      final resultado = await useCase(
+        origem: 'agua branca',
+        destino: 'maceio',
+      );
+
+      expect(resultado.length, 1);
+      expect(resultado.first.id, 2);
     });
 
     test('BuscarRotas deve retornar lista vazia se não houver rota correspondente', () async {
@@ -116,6 +136,20 @@ void main() {
       final resultado = await useCase(
         rotaId: 1,
         sentido: Sentido.ida,
+      );
+
+      expect(resultado.length, 2);
+      expect(resultado.first.hora, '06:00');
+    });
+
+    test('BuscarHorariosPorData deve delegar corretamente para o repositório com data', () async {
+      final useCase = BuscarHorariosPorData(repository);
+      final data = DateTime(2026, 9, 7);
+
+      final resultado = await useCase(
+        rotaId: 1,
+        sentido: Sentido.ida,
+        data: data,
       );
 
       expect(resultado.length, 2);

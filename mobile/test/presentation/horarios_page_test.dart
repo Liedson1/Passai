@@ -9,7 +9,7 @@ import 'package:passai/presentation/providers/rotas_provider.dart';
 
 class FakeRotasRepository implements RotasRepository {
   @override
-  Future<List<String>> buscarCidades() async => ['Água Branca', 'Delmiro Gouveia'];
+  Future<List<String>> buscarCidades({String? termo}) async => ['Água Branca', 'Delmiro Gouveia'];
 
   @override
   Future<List<Rota>> buscarTodasAsRotas() async => [];
@@ -29,6 +29,15 @@ class FakeRotasRepository implements RotasRepository {
         const Horario(id: 3, hora: '14:00', sentido: Sentido.volta),
       ];
     }
+  }
+
+  @override
+  Future<List<Horario>> buscarHorariosPorData({
+    required int rotaId,
+    required Sentido sentido,
+    required DateTime data,
+  }) async {
+    return buscarHorarios(rotaId: rotaId, sentido: sentido);
   }
 }
 

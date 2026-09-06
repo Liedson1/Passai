@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
@@ -50,9 +51,16 @@ class _HorariosPageState extends ConsumerState<HorariosPage> {
     final params = HorariosParams(rotaId: widget.rota.id, sentido: sentido);
     final horariosAsync = ref.watch(horariosProvider(params));
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: RefreshIndicator(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.go(AppRoutes.home);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () async {
           ref.invalidate(horariosProvider(params));
@@ -86,8 +94,9 @@ class _HorariosPageState extends ConsumerState<HorariosPage> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ---------------------------------------------------------------------------
@@ -109,6 +118,11 @@ class _AppBar extends StatelessWidget {
       pinned: true,
       backgroundColor: AppColors.primary,
       iconTheme: const IconThemeData(color: AppColors.textOnPrimary),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: AppColors.textOnPrimary),
+        tooltip: 'Voltar',
+        onPressed: () => context.go(AppRoutes.home),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           color: AppColors.primary,

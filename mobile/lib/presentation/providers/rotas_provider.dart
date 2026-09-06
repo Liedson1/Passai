@@ -28,14 +28,59 @@ final buscarRotasUsecaseProvider = Provider<BuscarRotas>(
 // Providers de estado
 // ---------------------------------------------------------------------------
 
-/// Lista de todas as cidades disponíveis (para os dropdowns)
+/// Lista de todas as cidades disponíveis (carga inicial / fallback)
 final cidadesProvider = FutureProvider<List<String>>((ref) {
   return ref.watch(rotasRepositoryProvider).buscarCidades();
+});
+
+/// Busca reativa de cidades por termo — usado pelo autocomplete.
+/// Usa FutureProvider.family para que cada termo tenha seu próprio cache.
+/// O índice trigram (migration 003) torna a busca eficiente no banco.
+final cidadesPorTermoProvider =
+    FutureProvider.family<List<String>, String>((ref, termo) {
+  return ref.watch(rotasRepositoryProvider).buscarCidades(termo: termo);
 });
 
 /// Lista de todas as rotas ativas (para a seção de rotas disponíveis)
 final todasAsRotasProvider = FutureProvider<List<Rota>>((ref) {
   return ref.watch(rotasRepositoryProvider).buscarTodasAsRotas();
+});
+
+/// Retorna as cidades diretamente conectadas a uma [cidadeBase] por rotas ativas.
+/// Se [cidadeBase] for nula ou vazia, retorna a lista completa de cidades.
+final cidadesConectadasProvider =
+    Provider.family<List<String>, String?>((ref, cidadeBase) {
+  final todasCidades = ref.watch(cidadesProvider).valueOrNull ?? const <String>[];
+  if (cidadeBase == null || cidadeBase.trim().isEmpty) {
+    return todasCidades;
+  }
+
+  final rotasAsync = ref.watch(todasAsRotasProvider);
+  final rotas = rotasAsync.valueOrNull ?? const <Rota>[];
+  if (rotas.isEmpty) {
+    return todasCidades;
+  }
+
+  final base = cidadeBase.trim().toLowerCase();
+  final conectadas = <String>{};
+
+  for (final rota in rotas) {
+    final orig = rota.origem.trim().toLowerCase();
+    final dest = rota.destino.trim().toLowerCase();
+
+    if (orig == base) {
+      conectadas.add(rota.destino.trim());
+    } else if (dest == base) {
+      conectadas.add(rota.origem.trim());
+    }
+  }
+
+  if (conectadas.isEmpty) {
+    return todasCidades;
+  }
+
+  final result = conectadas.toList()..sort((a, b) => a.compareTo(b));
+  return result;
 });
 
 /// Notifier da busca de origem selecionada
