@@ -45,12 +45,8 @@ class WebNavbar extends ConsumerWidget implements PreferredSizeWidget {
                   children: [
                     _NavLink(
                       title: 'Buscar Vans',
-                      isSelected: true,
-                      onTap: () => context.go(AppRoutes.home),
-                    ),
-                    const SizedBox(width: 24),
-                    _NavLink(
-                      title: 'Rotas e Horários',
+                      isSelected: GoRouterState.of(context).matchedLocation ==
+                          AppRoutes.home,
                       onTap: () => context.go(AppRoutes.home),
                     ),
                     if ((pwaState.canInstall || pwaState.isIos) &&

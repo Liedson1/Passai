@@ -17,7 +17,7 @@ class AppConstants {
   static const String state = 'ALAGOAS';
   static const String tagline = 'Para onde você vai hoje?';
   static const String taglineSubtitle =
-      'Consulte horários de vans intermunicipais no Sertão';
+      'Consulte horários de vans intermunicipais em Alagoas';
 }
 
 /// Nomes das rotas do GoRouter — use sempre estas constantes para navegar

@@ -20,78 +20,48 @@ class WebFooter extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Linha superior com Logo/Descrição e Colunas de Links
+                // Linha superior com Logo/Descrição e Coluna Legal
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Coluna da Marca
-                    Expanded(
-                      flex: 4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const PassaiLogo.horizontal(height: 30),
-                          const SizedBox(height: 14),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 380),
-                            child: const Text(
-                              'A plataforma definitiva para consulta de linhas, horários e tarifas de vans intermunicipais e transporte complementar no Sertão de Alagoas.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.footerText,
-                                height: 1.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 32),
-
-                    // Coluna Cidades Atendidas
-                    const Expanded(
-                      flex: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Cidades Atendidas',
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const PassaiLogo.horizontal(height: 30),
+                        const SizedBox(height: 14),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 440),
+                          child: const Text(
+                            'A plataforma definitiva para consulta de linhas, horários e tarifas de vans intermunicipais e transporte complementar em Alagoas.',
                             style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              fontSize: 13,
+                              color: AppColors.footerText,
+                              height: 1.5,
                             ),
                           ),
-                          SizedBox(height: 12),
-                          _FooterLink(title: 'Delmiro Gouveia'),
-                          _FooterLink(title: 'Piranhas'),
-                          _FooterLink(title: 'Arapiraca'),
-                          _FooterLink(title: 'Maceió'),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
 
                     // Coluna Legal
-                    const Expanded(
-                      flex: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Legal',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Legal',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                          SizedBox(height: 12),
-                          _FooterLink(title: 'Termos de Uso'),
-                          _FooterLink(title: 'Políticas de Privacidade'),
-                          _FooterLink(title: 'Contato e Suporte'),
-                        ],
-                      ),
+                        ),
+                        SizedBox(height: 12),
+                        _FooterLink(title: 'Termos de Uso'),
+                        _FooterLink(title: 'Políticas de Privacidade'),
+                        _FooterLink(title: 'Contato e Suporte'),
+                      ],
                     ),
                   ],
                 ),
@@ -105,7 +75,7 @@ class WebFooter extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '© 2026 Passaí. Todos os direitos reservados. Desenvolvimento focado na mobilidade sertaneja.',
+                      '© 2026 Passaí. Todos os direitos reservados.',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.footerText.withValues(alpha: 0.8),

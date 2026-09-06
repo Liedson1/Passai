@@ -85,7 +85,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           children: [
             const AuthHeroBanner(
               titulo: 'Crie sua conta',
-              subtitulo: 'Consulte horários de vans intermunicipais no Sertão',
+              subtitulo: 'Consulte horários de vans intermunicipais em Alagoas',
             ),
             _RegisterCard(
               nomeController: _nomeController,

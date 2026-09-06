@@ -213,7 +213,7 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 620),
                         child: Text(
-                          'Consulte de forma rápida e prática os horários e tarifas das vans intermunicipais no Sertão de Alagoas.',
+                          'Consulte de forma rápida e prática os horários e tarifas das vans intermunicipais em Alagoas.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 15,
@@ -445,7 +445,7 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Selecione uma das linhas mais buscadas no Sertão Alagoano para ver os próximos horários.',
+                        'Selecione uma das linhas mais buscadas em Alagoas para ver os próximos horários.',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
