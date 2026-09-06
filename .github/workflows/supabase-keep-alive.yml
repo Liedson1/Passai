@@ -1,0 +1,66 @@
+name: Supabase Keep-Alive Bot
+
+on:
+  schedule:
+    # Executa a cada 5 dias às 12:00 UTC (09:00 horário de Brasília)
+    # Garante que o Supabase nunca fique 7 dias inativo no plano gratuito
+    - cron: '0 12 */5 * *'
+  workflow_dispatch: # Permite disparar o bot manualmente pela aba Actions do GitHub
+
+jobs:
+  ping-supabase:
+    name: Ping Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          echo "🚀 Iniciando bot de keep-alive do Supabase..."
+          
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "❌ Erro: SUPABASE_URL ou SUPABASE_ANON_KEY não estão configurados nos Secrets do GitHub."
+            echo "👉 Para configurar:"
+            echo "   1. Acesse o repositório no GitHub > Settings > Secrets and variables > Actions"
+            echo "   2. Adicione os segredos SUPABASE_URL e SUPABASE_ANON_KEY"
+            exit 1
+          fi
+
+          # Remove barra final da URL se houver
+          BASE_URL="${SUPABASE_URL%/}"
+
+          echo "📡 Enviando requisição ao PostgreSQL via REST API..."
+          echo "Endpoint: $BASE_URL/rest/v1/cidades?select=id&limit=1"
+
+          # Executa uma consulta real ao banco (SELECT id FROM cidades LIMIT 1)
+          # Isso gera atividade direta no PostgreSQL, impedindo o auto-pause do Supabase
+          HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" \
+            -X GET "$BASE_URL/rest/v1/cidades?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Range: 0-0")
+
+          echo "HTTP Status Code recebido: $HTTP_STATUS"
+          echo "Resposta:"
+          cat response.json || true
+          echo ""
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Sucesso! O banco de dados Supabase respondeu com êxito e permanecerá ativo por mais 7 dias."
+          else
+            echo "⚠️ Aviso: Resposta inesperada ($HTTP_STATUS). Testando endpoint de autenticação/saúde como contingência..."
+            
+            HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -X GET "$BASE_URL/auth/v1/health" \
+              -H "apikey: $SUPABASE_ANON_KEY")
+
+            echo "Health Status Code: $HEALTH_STATUS"
+
+            if [ "$HEALTH_STATUS" -ge 200 ] && [ "$HEALTH_STATUS" -lt 300 ]; then
+              echo "✅ Endpoint de contingência respondeu com sucesso! Instância ativa."
+            else
+              echo "❌ Falha ao alcançar o Supabase. Verifique suas credenciais."
+              exit 1
+            fi
+          fi
