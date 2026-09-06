@@ -18,44 +18,14 @@ class AuthHeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).padding.top;
-    final now = DateTime.now();
-    final hora =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
     return Container(
       width: double.infinity,
       color: AppColors.primary,
-      padding: EdgeInsets.fromLTRB(24, statusBarHeight + 12, 24, 40),
+      padding: EdgeInsets.fromLTRB(24, statusBarHeight + 16, 24, 36),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status bar simulada
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                hora,
-                style: AppTextStyles.bodySemibold(
-                  fontSize: 14,
-                  color: AppColors.textOnPrimary,
-                ),
-              ),
-              const Row(
-                children: [
-                  Icon(Icons.signal_cellular_alt,
-                      color: AppColors.textOnPrimary, size: 16),
-                  SizedBox(width: 4),
-                  Icon(Icons.wifi, color: AppColors.textOnPrimary, size: 16),
-                  SizedBox(width: 4),
-                  Icon(Icons.battery_full,
-                      color: AppColors.textOnPrimary, size: 16),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
           // Logo Oficial Horizontal SVG
           const PassaiLogo.horizontal(height: 38),
 
