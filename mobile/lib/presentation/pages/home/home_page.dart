@@ -4,10 +4,17 @@ import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/errors/exceptions.dart';
 import 'package:passai/domain/entities/horario.dart';
-import 'package:passai/presentation/pages/horarios/horarios_page.dart';
+import 'package:passai/domain/entities/rota.dart';
+import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/popular_route_card.dart';
+import 'package:passai/presentation/widgets/responsive_shell.dart';
+import 'package:passai/presentation/widgets/common/passai_logo.dart';
+import 'package:passai/presentation/widgets/web/pwa_install_banner.dart';
+import 'widgets/home_desktop_view.dart';
+import 'widgets/why_passai_section.dart';
 
 /// Tela principal do Passaí — consulta de horários de vans
 class HomePage extends ConsumerWidget {
@@ -15,8 +22,15 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
+    if (isDesktop) {
+      return const HomeDesktopView();
+    }
+
+    return ResponsiveShell(
+      child: Scaffold(
+        backgroundColor: AppColors.background,
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () async {
@@ -39,6 +53,7 @@ class HomePage extends ConsumerWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -85,55 +100,22 @@ class _HeroBanner extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Logo + pill ALAGOAS
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.directions_bus, color: AppColors.textOnPrimary, size: 26),
-                  const SizedBox(width: 8),
-                  Text(
-                    AppConstants.appName,
-                    style: AppTextStyles.headingXL(color: AppColors.textOnPrimary),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.heroOverlay,
-                  borderRadius: BorderRadius.circular(AppRadii.pill),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.textOnPrimary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      AppConstants.state,
-                      style: AppTextStyles.bodyBold(
-                        fontSize: 12,
-                        color: AppColors.textOnPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          // Logo Passaí Oficial Horizontal SVG
+          const PassaiLogo.horizontal(height: 38),
 
           const SizedBox(height: 16),
 
-          Text(
-            AppConstants.tagline,
-            style: AppTextStyles.headingLG(color: AppColors.textOnPrimary),
+          RichText(
+            text: TextSpan(
+              style: AppTextStyles.headingLG(color: AppColors.textOnPrimary),
+              children: const [
+                TextSpan(text: 'Para onde você '),
+                TextSpan(
+                  text: 'vai hoje?',
+                  style: TextStyle(color: AppColors.titleGold),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -152,19 +134,109 @@ class _HeroBanner extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Conteúdo do corpo
 // ---------------------------------------------------------------------------
+// Conteúdo do corpo
+// ---------------------------------------------------------------------------
 class _BodyContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final rotasAsync = ref.watch(todasAsRotasProvider);
+    final cidadesAsync = ref.watch(cidadesProvider);
+
+    final isOffline = (rotasAsync.hasError && cidadesAsync.hasError) ||
+        (rotasAsync.error is NetworkException ||
+            cidadesAsync.error is NetworkException);
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SearchCard(),
+          if (isOffline)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(AppRadii.card),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.wifi_off_rounded,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Sem conexão com a internet',
+                            style: AppTextStyles.bodyBold(
+                              fontSize: 14,
+                              color: AppColors.primaryDark,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'O Passaí precisa de conexão ativa para consultar horários atualizados.',
+                            style: AppTextStyles.bodyRegular(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: AppColors.primary),
+                      tooltip: 'Tentar novamente',
+                      onPressed: () {
+                        ref.invalidate(cidadesProvider);
+                        ref.invalidate(todasAsRotasProvider);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          const PwaInstallBanner(),
+          const _SearchCard(),
           const SizedBox(height: 16),
-          _TimeCard(),
+          const SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                HeroTrustBadge(
+                  icon: Icons.check_circle_outline_rounded,
+                  label: '100% gratuito e sem cadastro',
+                  isLight: false,
+                ),
+                SizedBox(width: 8),
+                HeroTrustBadge(
+                  icon: Icons.update_rounded,
+                  label: 'Horários do dia atualizados',
+                  isLight: false,
+                ),
+                SizedBox(width: 8),
+                HeroTrustBadge(
+                  icon: Icons.payments_outlined,
+                  label: 'Tarifas oficiais de Alagoas',
+                  isLight: false,
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
-          _RotasPopularesSection(),
+          const _RotasPopularesSection(),
+          const SizedBox(height: 24),
+          const WhyPassaiSection(isDesktop: false),
         ],
       ),
     );
@@ -172,14 +244,41 @@ class _BodyContent extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Card de busca com dropdowns dinâmicos
+// Card de busca com autocomplete
 // ---------------------------------------------------------------------------
-class _SearchCard extends ConsumerWidget {
+class _SearchCard extends ConsumerStatefulWidget {
+  const _SearchCard();
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final cidadesAsync = ref.watch(cidadesProvider);
+  ConsumerState<_SearchCard> createState() => _SearchCardState();
+}
+
+class _SearchCardState extends ConsumerState<_SearchCard> {
+  bool _isSearching = false;
+  String? _errorMessage;
+  IconData? _errorIcon;
+
+  void _clearError() {
+    if (_errorMessage != null) {
+      setState(() {
+        _errorMessage = null;
+        _errorIcon = null;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final origem = ref.watch(origemSelecionadaProvider);
     final destino = ref.watch(destinoSelecionadoProvider);
+    final cidadesOrigem = ref.watch(cidadesConectadasProvider(destino));
+    final cidadesDestino = ref.watch(cidadesConectadasProvider(origem));
+
+    final canSearch = origem != null &&
+        origem.trim().isNotEmpty &&
+        destino != null &&
+        destino.trim().isNotEmpty &&
+        !_isSearching;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -188,49 +287,43 @@ class _SearchCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppRadii.card),
         border: Border.all(color: AppColors.border),
       ),
-      child: cidadesAsync.when(
-        loading: () => const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(color: AppColors.primary),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Autocomplete Origem
+          _CidadeAutocomplete(
+            key: const Key('autocomplete_origem'),
+            label: 'ORIGEM',
+            icon: Icons.location_on,
+            iconColor: AppColors.primary,
+            valorInicial: origem,
+            cidades: cidadesOrigem,
+            onSelecionada: (v) {
+              _clearError();
+              ref.read(origemSelecionadaProvider.notifier).state = v;
+            },
+            onLimpa: () {
+              _clearError();
+              ref.read(origemSelecionadaProvider.notifier).state = null;
+            },
           ),
-        ),
-        error: (_, __) => Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            'Erro ao carregar cidades. Verifique a conexão.',
-            style: AppTextStyles.bodyRegular(
-              fontSize: 14,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-        data: (cidades) => Column(
-          children: [
-            // Dropdown Origem
-            _CidadeDropdown(
-              label: 'ORIGEM',
-              icon: Icons.circle,
-              iconColor: AppColors.primary,
-              value: origem,
-              cidades: cidades,
-              onChanged: (v) =>
-                  ref.read(origemSelecionadaProvider.notifier).state = v,
-            ),
 
-            // Swap button
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  const Expanded(child: Divider(color: AppColors.border)),
-                  const SizedBox(width: 8),
-                  GestureDetector(
+          // Botão de swap
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                const Expanded(child: Divider(color: AppColors.border)),
+                const SizedBox(width: 8),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
                     onTap: () {
-                      final origemAtual = ref.read(origemSelecionadaProvider);
-                      final destinoAtual = ref.read(destinoSelecionadoProvider);
-                      ref.read(origemSelecionadaProvider.notifier).state = destinoAtual;
-                      ref.read(destinoSelecionadoProvider.notifier).state = origemAtual;
+                      _clearError();
+                      final o = ref.read(origemSelecionadaProvider);
+                      final d = ref.read(destinoSelecionadoProvider);
+                      ref.read(origemSelecionadaProvider.notifier).state = d;
+                      ref.read(destinoSelecionadoProvider.notifier).state = o;
                     },
                     child: Container(
                       width: 32,
@@ -246,318 +339,603 @@ class _SearchCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Expanded(child: Divider(color: AppColors.border)),
-                ],
+                ),
+                const SizedBox(width: 8),
+                const Expanded(child: Divider(color: AppColors.border)),
+              ],
+            ),
+          ),
+
+          // Autocomplete Destino
+          _CidadeAutocomplete(
+            key: const Key('autocomplete_destino'),
+            label: 'DESTINO',
+            icon: Icons.location_on,
+            iconColor: AppColors.secondary,
+            valorInicial: destino,
+            cidades: cidadesDestino,
+            onSelecionada: (v) {
+              _clearError();
+              ref.read(destinoSelecionadoProvider.notifier).state = v;
+            },
+            onLimpa: () {
+              _clearError();
+              ref.read(destinoSelecionadoProvider.notifier).state = null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Botão Buscar Vans
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: canSearch
+                  ? () => _buscar(context, origem.trim(), destino.trim())
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                disabledBackgroundColor: AppColors.border,
+                foregroundColor: AppColors.textOnPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.button),
+                ),
+                elevation: 0,
+              ),
+              icon: _isSearching
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.textOnPrimary,
+                      ),
+                    )
+                  : const Icon(Icons.search, size: 18),
+              label: Text(
+                _isSearching ? 'Buscando...' : 'Buscar Vans',
+                style: AppTextStyles.bodyBold(
+                  fontSize: 15,
+                  color: AppColors.textOnPrimary,
+                ),
               ),
             ),
+          ),
 
-            // Dropdown Destino
-            _CidadeDropdown(
-              label: 'DESTINO',
-              icon: Icons.location_on,
-              iconColor: AppColors.secondary,
-              value: destino,
-              cidades: cidades,
-              onChanged: (v) =>
-                  ref.read(destinoSelecionadoProvider.notifier).state = v,
-            ),
-
+          // Banner de erro inline (substitui SnackBars)
+          if (_errorMessage != null) ...[
             const SizedBox(height: 12),
-
-            // Botão Buscar
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: (origem != null && destino != null)
-                    ? () => _buscar(context, ref, origem, destino)
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  disabledBackgroundColor: AppColors.border,
-                  foregroundColor: AppColors.textOnPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadii.button),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.search, size: 18),
-                label: Text(
-                  'Buscar Vans',
-                  style: AppTextStyles.bodyBold(
-                    fontSize: 15,
-                    color: AppColors.textOnPrimary,
-                  ),
-                ),
-              ),
+            _InlineAlertBanner(
+              message: _errorMessage!,
+              icon: _errorIcon ?? Icons.info_outline,
+              onClose: _clearError,
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 
   Future<void> _buscar(
     BuildContext context,
-    WidgetRef ref,
     String origem,
     String destino,
   ) async {
+    _clearError();
+
     if (origem.trim().toLowerCase() == destino.trim().toLowerCase()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('A origem e o destino devem ser cidades diferentes.'),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      setState(() {
+        _errorMessage = 'A origem e o destino devem ser cidades diferentes.';
+        _errorIcon = Icons.info_outline;
+      });
       return;
     }
 
-    final resultados = await ref
-        .read(buscarRotasUsecaseProvider)
-        .buscarComSentido(origem: origem, destino: destino);
+    setState(() => _isSearching = true);
 
-    if (!context.mounted) return;
+    try {
+      final resultados = await ref
+          .read(buscarRotasUsecaseProvider)
+          .buscarComSentido(origem: origem, destino: destino);
 
-    if (resultados.isNotEmpty) {
-      final match = resultados.first;
-      context.push(
-        AppRoutes.horarios,
-        extra: HorariosArgs(
-          rota: match.rota,
-          initialSentido: match.sentido,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Nenhuma van direta cadastrada entre $origem e $destino.',
+      if (!mounted || !context.mounted) return;
+
+      if (resultados.isNotEmpty) {
+        final match = resultados.first;
+        context.push(
+          AppRoutes.resultados,
+          extra: ResultadosArgs(
+            rota: match.rota,
+            sentido: match.sentido,
           ),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+        );
+      } else {
+        setState(() {
+          _errorMessage =
+              'Nenhuma van direta cadastrada entre $origem e $destino.';
+          _errorIcon = Icons.directions_bus_outlined;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e is NetworkException
+          ? e.message
+          : 'Sem conexão com a internet. O Passaí precisa de conexão para buscar horários.';
+      setState(() {
+        _errorMessage = msg;
+        _errorIcon = Icons.wifi_off_rounded;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isSearching = false);
+      }
     }
   }
 }
 
 // ---------------------------------------------------------------------------
-// Dropdown de cidade
+// Banner de alerta inline (substitui SnackBars em formulários)
 // ---------------------------------------------------------------------------
-class _CidadeDropdown extends StatelessWidget {
-  const _CidadeDropdown({
+class _InlineAlertBanner extends StatelessWidget {
+  const _InlineAlertBanner({
+    required this.message,
+    this.icon = Icons.info_outline,
+    required this.onClose,
+  });
+
+  final String message;
+  final IconData icon;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(AppRadii.input),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTextStyles.bodyMedium(
+                fontSize: 13,
+                color: AppColors.primaryDark,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onClose,
+            child: const Padding(
+              padding: EdgeInsets.all(4.0),
+              child: Icon(
+                Icons.close,
+                color: AppColors.primary,
+                size: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Campo de autocomplete de cidade — busca rápida e digitação direta
+// ---------------------------------------------------------------------------
+class _CidadeAutocomplete extends ConsumerStatefulWidget {
+  const _CidadeAutocomplete({
+    super.key,
     required this.label,
     required this.icon,
     required this.iconColor,
-    required this.value,
+    required this.valorInicial,
     required this.cidades,
-    required this.onChanged,
+    required this.onSelecionada,
+    required this.onLimpa,
   });
 
   final String label;
   final IconData icon;
   final Color iconColor;
-  final String? value;
+  final String? valorInicial;
   final List<String> cidades;
-  final void Function(String?) onChanged;
+  final void Function(String) onSelecionada;
+  final VoidCallback onLimpa;
+
+  @override
+  ConsumerState<_CidadeAutocomplete> createState() =>
+      _CidadeAutocompleteState();
+}
+
+class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.valorInicial ?? '');
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void didUpdateWidget(_CidadeAutocomplete oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.valorInicial != oldWidget.valorInicial &&
+        widget.valorInicial != _controller.text) {
+      _controller.text = widget.valorInicial ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  static String _removerAcentos(String str) {
+    return str
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[àáâãäå]'), 'a')
+        .replaceAll(RegExp(r'[èéêë]'), 'e')
+        .replaceAll(RegExp(r'[ìíîï]'), 'i')
+        .replaceAll(RegExp(r'[òóôõö]'), 'o')
+        .replaceAll(RegExp(r'[ùúûü]'), 'u')
+        .replaceAll(RegExp(r'[ç]'), 'c');
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppRadii.input),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                isExpanded: true,
-                hint: Column(
+    return RawAutocomplete<String>(
+      textEditingController: _controller,
+      focusNode: _focusNode,
+      optionsBuilder: (textEditingValue) {
+        final termo = textEditingValue.text.trim();
+        if (termo.isEmpty) {
+          return widget.cidades;
+        }
+
+        final tNorm = _removerAcentos(termo);
+        final matches = widget.cidades.where((c) {
+          return _removerAcentos(c).contains(tNorm);
+        }).toList();
+
+        // Se o que está digitado coincidir exatamente com uma única opção já selecionada,
+        // fecha o dropdown flutuante
+        if (matches.length == 1 && _removerAcentos(matches.first) == tNorm) {
+          return const Iterable<String>.empty();
+        }
+
+        return matches;
+      },
+      onSelected: (cidade) {
+        _controller.text = cidade;
+        widget.onSelecionada(cidade);
+        _focusNode.unfocus();
+      },
+      fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          decoration: BoxDecoration(
+            color: AppColors.inputBackground,
+            borderRadius: BorderRadius.circular(AppRadii.input),
+          ),
+          child: Row(
+            children: [
+              Icon(widget.icon, color: widget.iconColor, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      label,
+                      widget.label,
                       style: AppTextStyles.bodyRegular(
                         fontSize: 11,
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    Text(
-                      'Selecione...',
-                      style: AppTextStyles.bodyMedium(
+                    TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      onSubmitted: (_) => onSubmitted(),
+                      onChanged: (text) {
+                        final trimmed = text.trim();
+                        if (trimmed.isEmpty) {
+                          widget.onLimpa();
+                        } else {
+                          final tNorm = _removerAcentos(trimmed);
+                          final match = widget.cidades.firstWhere(
+                            (c) => _removerAcentos(c) == tNorm,
+                            orElse: () => trimmed,
+                          );
+                          widget.onSelecionada(match);
+                        }
+                      },
+                      style: AppTextStyles.bodySemibold(
                         fontSize: 15,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        hintText: 'Digite ou selecione a cidade...',
+                        hintStyle: AppTextStyles.bodyMedium(
+                          fontSize: 15,
+                          color: AppColors.textSecondary,
+                        ),
+                        border: InputBorder.none,
+                        filled: false,
                       ),
                     ),
                   ],
                 ),
-                selectedItemBuilder: (context) => cidades
-                    .map(
-                      (c) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+              ),
+              // Ícone para limpar o campo
+              if (controller.text.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    controller.clear();
+                    widget.onLimpa();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(4.0),
+                    child: Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                      size: 18,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        if (options.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final screenWidth = MediaQuery.of(context).size.width;
+        final cardWidth = (screenWidth - 72).clamp(200.0, 600.0);
+
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            elevation: 6,
+            shadowColor: AppColors.textPrimary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppRadii.input),
+            color: AppColors.surface,
+            child: Container(
+              width: cardWidth,
+              constraints: const BoxConstraints(maxHeight: 220),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadii.input),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                shrinkWrap: true,
+                itemCount: options.length,
+                separatorBuilder: (_, __) => const Divider(
+                  height: 1,
+                  color: AppColors.border,
+                  indent: 14,
+                  endIndent: 14,
+                ),
+                itemBuilder: (context, index) {
+                  final cidade = options.elementAt(index);
+                  return InkWell(
+                    onTap: () => onSelected(cidade),
+                    borderRadius: BorderRadius.circular(AppRadii.input),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            label,
-                            style: AppTextStyles.bodyRegular(
-                              fontSize: 11,
-                              color: AppColors.textSecondary,
+                          Icon(
+                            widget.icon,
+                            color: widget.iconColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              cidade,
+                              style: AppTextStyles.bodyMedium(
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
-                          Text(
-                            c,
-                            style: AppTextStyles.bodySemibold(
-                              fontSize: 15,
-                              color: AppColors.textPrimary,
-                            ),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.textSecondary,
+                            size: 12,
                           ),
                         ],
                       ),
-                    )
-                    .toList(),
-                items: cidades
-                    .map(
-                      (c) => DropdownMenuItem(
-                        value: c,
-                        child: Text(
-                          c,
-                          style: AppTextStyles.bodyRegular(
-                            fontSize: 14,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: onChanged,
+                    ),
+                  );
+                },
               ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Card de data e hora real
-// ---------------------------------------------------------------------------
-class _TimeCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-    final meses = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-    ];
-    final diaSemana = diasSemana[now.weekday - 1];
-    final mes = meses[now.month - 1];
-    final hora = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.secondaryLight,
-        borderRadius: BorderRadius.circular(AppRadii.input),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.access_time, color: AppColors.secondary, size: 18),
-          const SizedBox(width: 8),
-          Text(
-            'Hoje • $diaSemana, ${now.day} de $mes • $hora',
-            style: AppTextStyles.bodySemibold(
-              fontSize: 13,
-              color: AppColors.secondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+// ---------------------------------------------------------------------------
+// Configuração das rotas de destaque
+// ---------------------------------------------------------------------------
+class _RotaDestaqueConfig {
+  final String origem;
+  final String destino;
+  final String? via;
+  final String descricao;
+  final double? precoPadrao;
+  final int fallbackId;
+
+  const _RotaDestaqueConfig({
+    required this.origem,
+    required this.destino,
+    this.via,
+    required this.descricao,
+    this.precoPadrao,
+    required this.fallbackId,
+  });
 }
 
 // ---------------------------------------------------------------------------
-// Seção de rotas populares — carregadas do Supabase
+// Seção de rotas populares em destaque
 // ---------------------------------------------------------------------------
 class _RotasPopularesSection extends ConsumerWidget {
+  const _RotasPopularesSection();
+
+  static const _destaques = [
+    _RotaDestaqueConfig(
+      origem: 'Arapiraca',
+      destino: 'Maceió',
+      via: 'via Litoral',
+      descricao: 'Dois maiores polos do estado • via Litoral',
+      precoPadrao: 36.00,
+      fallbackId: 6,
+    ),
+    _RotaDestaqueConfig(
+      origem: 'Arapiraca',
+      destino: 'Olho d\'Água das Flores',
+      descricao: 'Importante ligação do Sertão',
+      precoPadrao: 28.00,
+      fallbackId: 54,
+    ),
+    _RotaDestaqueConfig(
+      origem: 'Palmeira dos Índios',
+      destino: 'Arapiraca',
+      descricao: 'Cidades próximas, fluxo constante',
+      precoPadrao: 10.00,
+      fallbackId: 67,
+    ),
+    _RotaDestaqueConfig(
+      origem: 'Água Branca',
+      destino: 'Delmiro Gouveia',
+      via: 'via Lagoa das Pedras',
+      descricao: 'Linha tradicional do Alto Sertão',
+      precoPadrao: 12.00,
+      fallbackId: 2,
+    ),
+    _RotaDestaqueConfig(
+      origem: 'Delmiro Gouveia',
+      destino: 'Arapiraca',
+      descricao: 'Ligação Alto Sertão ao Agreste',
+      precoPadrao: 29.30,
+      fallbackId: 26,
+    ),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todasRotasAsync = ref.watch(todasAsRotasProvider);
+    final todasRotas = ref.watch(todasAsRotasProvider).valueOrNull ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Rotas Disponíveis',
-          style: AppTextStyles.headingMD(color: AppColors.textPrimary),
-        ),
-        const SizedBox(height: 12),
-        todasRotasAsync.when(
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: CircularProgressIndicator(color: AppColors.primary),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Rotas Populares',
+              style: AppTextStyles.headingMD(color: AppColors.textPrimary),
             ),
-          ),
-          error: (_, __) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              'Não foi possível carregar as rotas disponíveis.',
-              style: AppTextStyles.bodyRegular(
-                fontSize: 14,
+            Text(
+              '5 principais',
+              style: AppTextStyles.bodyMedium(
+                fontSize: 12,
                 color: AppColors.textSecondary,
               ),
             ),
-          ),
-          data: (rotas) {
-            if (rotas.isEmpty) {
-              return Text(
-                'Nenhuma rota disponível no momento.',
-                style: AppTextStyles.bodyRegular(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              );
-            }
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: rotas.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final rota = rotas[index];
-                return PopularRouteCard(
-                  key: ValueKey(rota.id),
-                  route: PopularRoute(
-                    from: rota.origem,
-                    to: rota.destino,
-                    nextTime: '—',
-                    price: rota.tarifa != null
-                        ? 'R\$ ${rota.tarifa!.toStringAsFixed(2).replaceAll('.', ',')}'
-                        : 'Consultar',
-                  ),
-                  onTap: () => context.push(
-                    AppRoutes.horarios,
-                    extra: HorariosArgs(
-                      rota: rota,
-                      initialSentido: Sentido.ida,
-                    ),
-                  ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _destaques.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final config = _destaques[index];
+
+            // Procura a rota no banco de dados tanto na ida quanto na volta
+            Rota rota;
+            Sentido sentido;
+
+            final rotaDireta = todasRotas.where((r) {
+              return r.origem.toLowerCase().contains(config.origem.toLowerCase()) &&
+                  r.destino.toLowerCase().contains(config.destino.toLowerCase());
+            }).firstOrNull;
+
+            if (rotaDireta != null) {
+              rota = rotaDireta;
+              sentido = Sentido.ida;
+            } else {
+              final rotaReversa = todasRotas.where((r) {
+                return r.origem.toLowerCase().contains(config.destino.toLowerCase()) &&
+                    r.destino.toLowerCase().contains(config.origem.toLowerCase());
+              }).firstOrNull;
+
+              if (rotaReversa != null) {
+                rota = rotaReversa;
+                sentido = Sentido.volta;
+              } else {
+                rota = Rota(
+                  id: config.fallbackId,
+                  linha: '${config.origem} - ${config.destino}',
+                  origem: config.origem,
+                  destino: config.destino,
+                  diasOperacao: 'Diariamente',
+                  tarifa: config.precoPadrao,
                 );
-              },
+                sentido = Sentido.ida;
+              }
+            }
+
+            final tarifa = rota.tarifa ?? config.precoPadrao;
+            final precoStr = tarifa != null
+                ? 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}'
+                : 'Consultar';
+
+            return PopularRouteCard(
+              key: ValueKey('${config.origem}-${config.destino}'),
+              route: PopularRoute(
+                from: config.origem,
+                to: config.destino,
+                via: config.via,
+                price: precoStr,
+                subtitle: config.descricao,
+              ),
+              onTap: () => context.push(
+                AppRoutes.resultados,
+                extra: ResultadosArgs(
+                  rota: rota,
+                  sentido: sentido,
+                ),
+              ),
             );
           },
         ),

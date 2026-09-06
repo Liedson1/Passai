@@ -28,12 +28,12 @@ class BuscarRotas {
     final todasAsRotas = await _repository.buscarTodasAsRotas();
     final resultados = <RotaSearchResult>[];
 
-    final origemNorm = origem.trim().toLowerCase();
-    final destinoNorm = destino.trim().toLowerCase();
+    final origemNorm = _normalizar(origem);
+    final destinoNorm = _normalizar(destino);
 
     for (final rota in todasAsRotas) {
-      final rotaOrigemNorm = rota.origem.trim().toLowerCase();
-      final rotaDestinoNorm = rota.destino.trim().toLowerCase();
+      final rotaOrigemNorm = _normalizar(rota.origem);
+      final rotaDestinoNorm = _normalizar(rota.destino);
 
       // Sentido direto (origem -> destino = IDA)
       if (rotaOrigemNorm == origemNorm && rotaDestinoNorm == destinoNorm) {
@@ -46,6 +46,19 @@ class BuscarRotas {
     }
 
     return resultados;
+  }
+
+  /// Normaliza texto removendo acentos, espaços extras e convertendo para minúsculas.
+  static String _normalizar(String str) {
+    return str
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[àáâãäå]'), 'a')
+        .replaceAll(RegExp(r'[èéêë]'), 'e')
+        .replaceAll(RegExp(r'[ìíîï]'), 'i')
+        .replaceAll(RegExp(r'[òóôõö]'), 'o')
+        .replaceAll(RegExp(r'[ùúûü]'), 'u')
+        .replaceAll(RegExp(r'[ç]'), 'c');
   }
 
   /// Retorna rotas que combinam com a [origem] e o [destino] informados.

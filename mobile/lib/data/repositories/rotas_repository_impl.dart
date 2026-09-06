@@ -18,8 +18,8 @@ class RotasRepositoryImpl implements RotasRepository {
   }
 
   @override
-  Future<List<String>> buscarCidades() {
-    return _datasource.fetchCidades();
+  Future<List<String>> buscarCidades({String? termo}) {
+    return _datasource.fetchCidades(termo: termo);
   }
 
   @override
@@ -34,4 +34,20 @@ class RotasRepositoryImpl implements RotasRepository {
     );
     return models.map((m) => m.toEntity()).toList();
   }
+
+  @override
+  Future<List<Horario>> buscarHorariosPorData({
+    required int rotaId,
+    required Sentido sentido,
+    required DateTime data,
+  }) async {
+    final sentidoStr = sentido == Sentido.ida ? 'IDA' : 'VOLTA';
+    final models = await _datasource.fetchHorariosPorData(
+      rotaId: rotaId,
+      sentido: sentidoStr,
+      data: data,
+    );
+    return models.map((m) => m.toEntity()).toList();
+  }
 }
+

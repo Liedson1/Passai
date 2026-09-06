@@ -26,6 +26,9 @@ Thumbs.db
 # Arquivos locais e temporários
 implementation_plan.md
 walkthrough.md
+docs/
+scripts/
+quadro_horarios_arapiraca_sertao_estrito.json
 
 # Configurações de IA, Agentes e Skills
 AGENTS.md
@@ -33,5 +36,16 @@ CLAUDE.md
 .agents/
 skills/
 .gemini/
+
+# Flutter & Dart builds
+build/
+**/build/
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
 
 

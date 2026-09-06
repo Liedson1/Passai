@@ -11,6 +11,7 @@ class RotaModel {
     required this.diasOperacao,
     this.distanciaKm,
     this.tarifa,
+    this.seccionamentos,
   });
 
   final int id;
@@ -20,6 +21,7 @@ class RotaModel {
   final String diasOperacao;
   final int? distanciaKm;
   final double? tarifa;
+  final String? seccionamentos;
 
   factory RotaModel.fromJson(Map<String, dynamic> json) {
     final origemMap = json['origem'] ?? json['origem_cidade'];
@@ -35,14 +37,23 @@ class RotaModel {
     final linha = json['linha'] as String? ?? 'Linha ${json['id']}';
     final diasOperacao = json['dias_operacao'] as String? ?? 'Segunda a Domingo';
 
+    final id = json['id'] as int;
+    double? tarifa = (json['tarifa'] as num?)?.toDouble();
+    if (id == 6) {
+      tarifa = 36.00;
+    } else if (id == 54) {
+      tarifa = 28.00;
+    }
+
     return RotaModel(
-      id: json['id'] as int,
+      id: id,
       linha: linha,
       origem: origemNome,
       destino: destinoNome,
       diasOperacao: diasOperacao,
-      distanciaKm: json['distancia_km'] as int?,
-      tarifa: (json['tarifa'] as num?)?.toDouble(),
+      distanciaKm: (json['distancia_km'] as num?)?.toInt(),
+      tarifa: tarifa,
+      seccionamentos: json['seccionamentos'] as String?,
     );
   }
 
@@ -56,6 +67,7 @@ class RotaModel {
       diasOperacao: diasOperacao,
       distanciaKm: distanciaKm,
       tarifa: tarifa,
+      seccionamentos: seccionamentos,
     );
   }
 }

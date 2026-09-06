@@ -8,14 +8,18 @@ class PopularRoute {
   const PopularRoute({
     required this.from,
     required this.to,
-    required this.nextTime,
+    this.via,
+    this.nextTime = '—',
     required this.price,
+    this.subtitle,
   });
 
   final String from;
   final String to;
+  final String? via;
   final String nextTime;
   final String price;
+  final String? subtitle;
 }
 
 /// Card de rota popular exibido na lista da tela home
@@ -31,9 +35,11 @@ class PopularRouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -66,7 +72,7 @@ class PopularRouteCard extends StatelessWidget {
                       ),
                       Flexible(
                         child: Text(
-                          route.to,
+                          route.via != null ? '${route.to} (${route.via})' : route.to,
                           style: AppTextStyles.bodyBold(
                             fontSize: 14,
                             color: AppColors.textPrimary,
@@ -78,7 +84,7 @@ class PopularRouteCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Próxima: ${route.nextTime}',
+                    route.subtitle ?? 'Próxima: ${route.nextTime}',
                     style: AppTextStyles.bodyRegular(
                       fontSize: 12,
                       color: AppColors.textSecondary,
@@ -106,6 +112,7 @@ class PopularRouteCard extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

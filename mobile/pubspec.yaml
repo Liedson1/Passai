@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
 
   # Design
   google_fonts: ^6.2.1
@@ -30,6 +32,7 @@ dependencies:
 
   # Variáveis de ambiente
   flutter_dotenv: ^5.2.1
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -46,3 +49,4 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/images/

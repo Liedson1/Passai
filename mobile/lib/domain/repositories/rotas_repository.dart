@@ -7,8 +7,9 @@ abstract class RotasRepository {
   /// Retorna todas as rotas ativas do banco.
   Future<List<Rota>> buscarTodasAsRotas();
 
-  /// Retorna todas as cidades disponíveis (para os dropdowns de busca).
-  Future<List<String>> buscarCidades();
+  /// Retorna cidades cujo nome contém [termo] (case-insensitive).
+  /// Se [termo] for nulo ou vazio, retorna todas as cidades disponíveis.
+  Future<List<String>> buscarCidades({String? termo});
 
   /// Retorna os horários de uma [rotaId] filtrados por [sentido].
   /// Inclui a alteração ativa do dia, se houver (RN05).
@@ -16,4 +17,13 @@ abstract class RotasRepository {
     required int rotaId,
     required Sentido sentido,
   });
+
+  /// Retorna os horários de uma [rotaId] para uma [data] específica.
+  /// Filtra por [sentido] e inclui alterações ativas da data (RN05).
+  Future<List<Horario>> buscarHorariosPorData({
+    required int rotaId,
+    required Sentido sentido,
+    required DateTime data,
+  });
 }
+
