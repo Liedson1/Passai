@@ -25,15 +25,11 @@ void main() async {
   // Configura rotas limpas na web (sem o '#' na URL)
   configureAppUrlStrategy();
 
-  // Inicializa símbolos de formatação de data para pt_BR (necessário na Web)
-  await initializeDateFormatting('pt_BR', null);
-
-  // Carrega as variáveis de ambiente do arquivo .env (se existir)
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (_) {
-    // Em produção/CI com --dart-define, o arquivo .env pode não estar presente
-  }
+  // Inicialização assíncrona paralela para arranque rápido antes do primeiro frame
+  await Future.wait([
+    initializeDateFormatting('pt_BR', null),
+    dotenv.load(fileName: '.env').catchError((_) {}),
+  ]);
 
   // Inicializa o Supabase com as credenciais do .env ou --dart-define
   await initSupabase();
