@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:passai/core/theme/app_colors.dart';
 
 enum PassaiLogoVariant {
@@ -106,7 +105,8 @@ class PassaiLogo extends StatelessWidget {
           SizedBox(width: h * 0.28),
           Text(
             'PASSAÍ',
-            style: GoogleFonts.jua(
+            style: TextStyle(
+              fontFamily: 'Jua',
               fontSize: h * 0.75,
               letterSpacing: 1.0,
               color: effectiveColor,
@@ -135,7 +135,8 @@ class PassaiLogo extends StatelessWidget {
             SizedBox(width: h * 0.2),
             Text(
               'PASSAÍ',
-              style: GoogleFonts.jua(
+              style: TextStyle(
+                fontFamily: 'Jua',
                 fontSize: h * 0.54,
                 letterSpacing: 1.0,
                 color: Colors.white,
@@ -157,7 +158,8 @@ class PassaiLogo extends StatelessWidget {
     if (variant == PassaiLogoVariant.text) {
       return Text(
         'PASSAÍ',
-        style: GoogleFonts.jua(
+        style: TextStyle(
+          fontFamily: 'Jua',
           fontSize: h * 0.88,
           letterSpacing: 1.0,
           color: effectiveColor,
