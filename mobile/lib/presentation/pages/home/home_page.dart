@@ -181,7 +181,6 @@ class _BodyContent extends ConsumerWidget {
                 ),
               ),
             ),
-          const RepaintBoundary(child: PwaInstallBanner()),
           const RepaintBoundary(child: _SearchCard()),
           const SizedBox(height: 16),
           const RepaintBoundary(
@@ -210,6 +209,7 @@ class _BodyContent extends ConsumerWidget {
               ),
             ),
           ),
+          const RepaintBoundary(child: PwaInstallBanner()),
           const SizedBox(height: 24),
           const RepaintBoundary(child: _RotasPopularesSection()),
           const SizedBox(height: 24),
