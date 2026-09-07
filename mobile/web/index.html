@@ -272,16 +272,8 @@
       window.passaiPwa._notifyState();
     });
 
-    // Registra o Service Worker oficial do Passaí PWA com auto-update imediato
+    // Registra o Service Worker oficial do Passaí PWA com verificação de atualização em segundo plano
     if ('serviceWorker' in navigator) {
-      var refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', function() {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
-      });
-
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('sw.js?v=1.0.3', { scope: './' })
           .then(function(reg) {
