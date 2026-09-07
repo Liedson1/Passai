@@ -2,7 +2,7 @@
 // Garante conformidade com critérios de instalabilidade PWA do Chromium (Chrome/Edge/Android)
 // e resiliência offline para o shell da aplicação.
 
-const CACHE_NAME = 'passai-pwa-v1';
+const CACHE_NAME = 'passai-pwa-v2';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
