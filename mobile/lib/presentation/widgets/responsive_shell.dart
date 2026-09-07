@@ -31,18 +31,20 @@ class ResponsiveShell extends StatelessWidget {
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        child: Container(
-          decoration: BoxDecoration(
-            color: backgroundColor ?? AppColors.background,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.textPrimary.withValues(alpha: 0.10),
-                blurRadius: 32,
-                offset: const Offset(0, 8),
-              ),
-            ],
+        child: RepaintBoundary(
+          child: Container(
+            decoration: BoxDecoration(
+              color: backgroundColor ?? AppColors.background,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.textPrimary.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: child,
           ),
-          child: child,
         ),
       ),
     );

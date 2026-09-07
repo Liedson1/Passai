@@ -176,13 +176,14 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
         child: Column(
           children: [
             // 1. Barra de Navegação Superior
-            const WebNavbar(),
+            const RepaintBoundary(child: WebNavbar()),
 
             // 2. Hero Section com Título Duo-Tone e Barra de Busca
-            Container(
-              width: double.infinity,
-              color: AppColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+            RepaintBoundary(
+              child: Container(
+                width: double.infinity,
+                color: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 980),
@@ -234,9 +235,9 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                           borderRadius: BorderRadius.circular(22),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 28,
-                              offset: const Offset(0, 10),
+                              color: Colors.black.withValues(alpha: 0.10),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
@@ -446,12 +447,14 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                 ),
               ),
             ),
+          ),
 
             // 3. Seção Rotas Populares (Grade / Lista Desktop)
-            Container(
-              width: double.infinity,
-              color: AppColors.background,
-              padding: const EdgeInsets.symmetric(vertical: 56, horizontal: 24),
+            RepaintBoundary(
+              child: Container(
+                width: double.infinity,
+                color: AppColors.background,
+                padding: const EdgeInsets.symmetric(vertical: 56, horizontal: 24),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 980),
@@ -539,12 +542,13 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                 ),
               ),
             ),
+          ),
 
             // 4. Seção Por Que o Passaí (Dores, Benefícios e Público-alvo)
-            const WhyPassaiSection(isDesktop: true),
+            const RepaintBoundary(child: WhyPassaiSection(isDesktop: true)),
 
             // 5. Rodapé Escuro Institucional
-            const WebFooter(),
+            const RepaintBoundary(child: WebFooter()),
           ],
         ),
       ),

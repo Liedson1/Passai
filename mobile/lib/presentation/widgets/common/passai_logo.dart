@@ -208,11 +208,13 @@ class PassaiVanIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     // Proporção oficial do vetor original (largura 438, altura 275)
     final width = height * (438.0 / 275.0);
-    return SizedBox(
-      width: width,
-      height: height,
-      child: CustomPaint(
-        painter: PassaiVanPainter(color: color),
+    return RepaintBoundary(
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: CustomPaint(
+          painter: PassaiVanPainter(color: color),
+        ),
       ),
     );
   }

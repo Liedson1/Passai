@@ -47,7 +47,7 @@ class HomePage extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              _HeroBanner(),
+              RepaintBoundary(child: _HeroBanner()),
               _BodyContent(),
             ],
           ),
@@ -179,37 +179,39 @@ class _BodyContent extends ConsumerWidget {
                 ),
               ),
             ),
-          const PwaInstallBanner(),
-          const _SearchCard(),
+          const RepaintBoundary(child: PwaInstallBanner()),
+          const RepaintBoundary(child: _SearchCard()),
           const SizedBox(height: 16),
-          const SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                HeroTrustBadge(
-                  icon: Icons.check_circle_outline_rounded,
-                  label: '100% gratuito e sem cadastro',
-                  isLight: false,
-                ),
-                SizedBox(width: 8),
-                HeroTrustBadge(
-                  icon: Icons.update_rounded,
-                  label: 'Horários do dia atualizados',
-                  isLight: false,
-                ),
-                SizedBox(width: 8),
-                HeroTrustBadge(
-                  icon: Icons.payments_outlined,
-                  label: 'Tarifas oficiais de Alagoas',
-                  isLight: false,
-                ),
-              ],
+          const RepaintBoundary(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  HeroTrustBadge(
+                    icon: Icons.check_circle_outline_rounded,
+                    label: '100% gratuito e sem cadastro',
+                    isLight: false,
+                  ),
+                  SizedBox(width: 8),
+                  HeroTrustBadge(
+                    icon: Icons.update_rounded,
+                    label: 'Horários do dia atualizados',
+                    isLight: false,
+                  ),
+                  SizedBox(width: 8),
+                  HeroTrustBadge(
+                    icon: Icons.payments_outlined,
+                    label: 'Tarifas oficiais de Alagoas',
+                    isLight: false,
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 24),
-          const _RotasPopularesSection(),
+          const RepaintBoundary(child: _RotasPopularesSection()),
           const SizedBox(height: 24),
-          const WhyPassaiSection(isDesktop: false),
+          const RepaintBoundary(child: WhyPassaiSection(isDesktop: false)),
         ],
       ),
     );
@@ -868,71 +870,72 @@ class _RotasPopularesSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _destaques.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            final config = _destaques[index];
+        Column(
+          children: [
+            for (int index = 0; index < _destaques.length; index++) ...[
+              if (index > 0) const SizedBox(height: 10),
+              () {
+                final config = _destaques[index];
 
-            // Procura a rota no banco de dados tanto na ida quanto na volta
-            Rota rota;
-            Sentido sentido;
+                // Procura a rota no banco de dados tanto na ida quanto na volta
+                Rota rota;
+                Sentido sentido;
 
-            final rotaDireta = todasRotas.where((r) {
-              return r.origem.toLowerCase().contains(config.origem.toLowerCase()) &&
-                  r.destino.toLowerCase().contains(config.destino.toLowerCase());
-            }).firstOrNull;
+                final rotaDireta = todasRotas.where((r) {
+                  return r.origem.toLowerCase().contains(config.origem.toLowerCase()) &&
+                      r.destino.toLowerCase().contains(config.destino.toLowerCase());
+                }).firstOrNull;
 
-            if (rotaDireta != null) {
-              rota = rotaDireta;
-              sentido = Sentido.ida;
-            } else {
-              final rotaReversa = todasRotas.where((r) {
-                return r.origem.toLowerCase().contains(config.destino.toLowerCase()) &&
-                    r.destino.toLowerCase().contains(config.origem.toLowerCase());
-              }).firstOrNull;
+                if (rotaDireta != null) {
+                  rota = rotaDireta;
+                  sentido = Sentido.ida;
+                } else {
+                  final rotaReversa = todasRotas.where((r) {
+                    return r.origem.toLowerCase().contains(config.destino.toLowerCase()) &&
+                        r.destino.toLowerCase().contains(config.origem.toLowerCase());
+                  }).firstOrNull;
 
-              if (rotaReversa != null) {
-                rota = rotaReversa;
-                sentido = Sentido.volta;
-              } else {
-                rota = Rota(
-                  id: config.fallbackId,
-                  linha: '${config.origem} - ${config.destino}',
-                  origem: config.origem,
-                  destino: config.destino,
-                  diasOperacao: 'Diariamente',
-                  tarifa: config.precoPadrao,
+                  if (rotaReversa != null) {
+                    rota = rotaReversa;
+                    sentido = Sentido.volta;
+                  } else {
+                    rota = Rota(
+                      id: config.fallbackId,
+                      linha: '${config.origem} - ${config.destino}',
+                      origem: config.origem,
+                      destino: config.destino,
+                      diasOperacao: 'Diariamente',
+                      tarifa: config.precoPadrao,
+                    );
+                    sentido = Sentido.ida;
+                  }
+                }
+
+                final tarifa = rota.tarifa ?? config.precoPadrao;
+                final precoStr = tarifa != null
+                    ? 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}'
+                    : 'Consultar';
+
+                return PopularRouteCard(
+                  key: ValueKey('${config.origem}-${config.destino}'),
+                  route: PopularRoute(
+                    from: config.origem,
+                    to: config.destino,
+                    via: config.via,
+                    price: precoStr,
+                    subtitle: config.descricao,
+                  ),
+                  onTap: () => context.push(
+                    AppRoutes.resultados,
+                    extra: ResultadosArgs(
+                      rota: rota,
+                      sentido: sentido,
+                    ),
+                  ),
                 );
-                sentido = Sentido.ida;
-              }
-            }
-
-            final tarifa = rota.tarifa ?? config.precoPadrao;
-            final precoStr = tarifa != null
-                ? 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}'
-                : 'Consultar';
-
-            return PopularRouteCard(
-              key: ValueKey('${config.origem}-${config.destino}'),
-              route: PopularRoute(
-                from: config.origem,
-                to: config.destino,
-                via: config.via,
-                price: precoStr,
-                subtitle: config.descricao,
-              ),
-              onTap: () => context.push(
-                AppRoutes.resultados,
-                extra: ResultadosArgs(
-                  rota: rota,
-                  sentido: sentido,
-                ),
-              ),
-            );
-          },
+              }(),
+            ],
+          ],
         ),
       ],
     );
