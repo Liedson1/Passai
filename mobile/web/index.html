@@ -262,6 +262,19 @@
       window.passaiPwa.isInstalled = true;
       window.passaiPwa._notifyState();
     });
+
+    // Registra o Service Worker oficial do Passaí PWA para habilitar prompt de instalação no Chrome/Android/Desktop
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js', { scope: './' })
+          .then(function(reg) {
+            console.log('[Passaí PWA] Service Worker ativo:', reg.scope);
+          })
+          .catch(function(err) {
+            console.warn('[Passaí PWA] Falha ao registrar Service Worker:', err);
+          });
+      });
+    }
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
