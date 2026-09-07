@@ -40,7 +40,7 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Jua&family=Manrope:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet"></noscript>
 
   <!-- Preload Crítico para LCP Móvel e Inicialização Rápida -->
-  <link rel="preload" href="flutter_bootstrap.js" as="script">
+  <link rel="preload" href="flutter_bootstrap.js?v=1.0.3" as="script">
   <link rel="preload" href="icons/Icon-192.png" as="image">
 
   <!-- CanvasKit & Skwasm CDN Preconnect (Acelera inicialização do motor WebAssembly) -->
@@ -272,12 +272,21 @@
       window.passaiPwa._notifyState();
     });
 
-    // Registra o Service Worker oficial do Passaí PWA para habilitar prompt de instalação no Chrome/Android/Desktop
+    // Registra o Service Worker oficial do Passaí PWA com auto-update imediato
     if ('serviceWorker' in navigator) {
+      var refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js', { scope: './' })
+        navigator.serviceWorker.register('sw.js?v=1.0.3', { scope: './' })
           .then(function(reg) {
             console.log('[Passaí PWA] Service Worker ativo:', reg.scope);
+            reg.update();
           })
           .catch(function(err) {
             console.warn('[Passaí PWA] Falha ao registrar Service Worker:', err);
@@ -285,6 +294,6 @@
       });
     }
   </script>
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js?v=1.0.3" async></script>
 </body>
 </html>
