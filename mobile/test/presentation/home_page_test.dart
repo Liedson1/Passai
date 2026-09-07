@@ -308,7 +308,6 @@ void main() {
 
       // Verifica presença da seção Por Que o Passaí
       expect(find.text('POR QUE O PASSAÍ?'), findsOneWidget);
-      expect(find.text('Chega de esperar van que não vem'), findsOneWidget);
       expect(find.text('Preço certo antes de sair de casa'), findsOneWidget);
       expect(find.text('Direto ao ponto, sem login'), findsOneWidget);
       expect(find.text('Tudo em um único lugar'), findsOneWidget);

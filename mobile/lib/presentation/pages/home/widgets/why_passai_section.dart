@@ -65,15 +65,6 @@ class WhyPassaiSection extends StatelessWidget {
 
   static const _beneficios = [
     _BeneficioItem(
-      icon: Icons.schedule_rounded,
-      tag: 'Previsibilidade Real',
-      tagColor: AppColors.primary,
-      tagBgColor: AppColors.primaryLight,
-      titulo: 'Chega de esperar van que não vem',
-      descricao:
-          'Sabemos que imprevistos acontecem. O Passaí sinaliza alterações de horário do dia e avisa quando outra van assume a viagem, para você não ficar esperando à toa.',
-    ),
-    _BeneficioItem(
       icon: Icons.payments_outlined,
       tag: 'Sem Surpresas',
       tagColor: Color(0xFFB45309), // Amber dark
@@ -195,29 +186,14 @@ class WhyPassaiSection extends StatelessWidget {
 
               const SizedBox(height: 48),
 
-              // Grid 2x2 com os 4 Benefícios e Dores
+              // Grid com os 3 Benefícios Reais
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        _BeneficioCard(item: _beneficios[0]),
-                        const SizedBox(height: 20),
-                        _BeneficioCard(item: _beneficios[2]),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        _BeneficioCard(item: _beneficios[1]),
-                        const SizedBox(height: 20),
-                        _BeneficioCard(item: _beneficios[3]),
-                      ],
-                    ),
-                  ),
+                  for (int i = 0; i < _beneficios.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 20),
+                    Expanded(child: _BeneficioCard(item: _beneficios[i])),
+                  ],
                 ],
               ),
 
