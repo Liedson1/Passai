@@ -780,6 +780,20 @@ class _DesktopInputPillState extends State<_DesktopInputPill> {
                     TextField(
                       controller: controller,
                       focusNode: focusNode,
+                      onSubmitted: (_) {
+                        final text = controller.text.trim();
+                        if (text.isNotEmpty) {
+                          final match = widget.cidades.firstWhere(
+                            (c) => c.toLowerCase() == text.toLowerCase(),
+                            orElse: () => '',
+                          );
+                          if (match.isNotEmpty) {
+                            widget.onSelecionada(match);
+                            focusNode.unfocus();
+                          }
+                        }
+                        onFieldSubmitted();
+                      },
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -813,7 +827,6 @@ class _DesktopInputPillState extends State<_DesktopInputPill> {
                       ),
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(vertical: 6),
-                        shrinkWrap: true,
                         itemCount: options.length,
                         itemBuilder: (context, index) {
                           final option = options.elementAt(index);

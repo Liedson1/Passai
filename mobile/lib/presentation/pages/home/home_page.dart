@@ -623,18 +623,37 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
                     TextField(
                       controller: controller,
                       focusNode: focusNode,
-                      onSubmitted: (_) => onSubmitted(),
+                      onSubmitted: (_) {
+                        final trimmed = controller.text.trim();
+                        if (trimmed.isNotEmpty) {
+                          final todas = ref.read(cidadesProvider).valueOrNull ?? widget.cidades;
+                          final tNorm = _removerAcentos(trimmed);
+                          final match = todas.firstWhere(
+                            (c) => _removerAcentos(c) == tNorm,
+                            orElse: () => trimmed,
+                          );
+                          controller.text = match;
+                          widget.onSelecionada(match);
+                          focusNode.unfocus();
+                        }
+                        onSubmitted();
+                      },
                       onChanged: (text) {
                         final trimmed = text.trim();
                         if (trimmed.isEmpty) {
                           widget.onLimpa();
                         } else {
+                          final todas = ref.read(cidadesProvider).valueOrNull ?? widget.cidades;
                           final tNorm = _removerAcentos(trimmed);
-                          final match = widget.cidades.firstWhere(
+                          final exactMatch = todas.firstWhere(
                             (c) => _removerAcentos(c) == tNorm,
-                            orElse: () => trimmed,
+                            orElse: () => '',
                           );
-                          widget.onSelecionada(match);
+                          // Só propaga para o Riverpod se corresponder ao nome completo de uma cidade válida
+                          if (exactMatch.isNotEmpty &&
+                              exactMatch != widget.valorInicial) {
+                            widget.onSelecionada(exactMatch);
+                          }
                         }
                       },
                       style: AppTextStyles.bodySemibold(
@@ -691,60 +710,63 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
             shadowColor: AppColors.textPrimary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(AppRadii.input),
             color: AppColors.surface,
-            child: Container(
-              width: cardWidth,
-              constraints: const BoxConstraints(maxHeight: 220),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadii.input),
-                border: Border.all(color: AppColors.border),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: cardWidth,
+                maxHeight: 220,
               ),
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                shrinkWrap: true,
-                itemCount: options.length,
-                separatorBuilder: (_, __) => const Divider(
-                  height: 1,
-                  color: AppColors.border,
-                  indent: 14,
-                  endIndent: 14,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadii.input),
+                  border: Border.all(color: AppColors.border),
                 ),
-                itemBuilder: (context, index) {
-                  final cidade = options.elementAt(index);
-                  return InkWell(
-                    onTap: () => onSelected(cidade),
-                    borderRadius: BorderRadius.circular(AppRadii.input),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            widget.icon,
-                            color: widget.iconColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              cidade,
-                              style: AppTextStyles.bodyMedium(
-                                fontSize: 14,
-                                color: AppColors.textPrimary,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  itemCount: options.length,
+                  separatorBuilder: (_, __) => const Divider(
+                    height: 1,
+                    color: AppColors.border,
+                    indent: 14,
+                    endIndent: 14,
+                  ),
+                  itemBuilder: (context, index) {
+                    final cidade = options.elementAt(index);
+                    return InkWell(
+                      onTap: () => onSelected(cidade),
+                      borderRadius: BorderRadius.circular(AppRadii.input),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              widget.icon,
+                              color: widget.iconColor,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                cidade,
+                                style: AppTextStyles.bodyMedium(
+                                  fontSize: 14,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
-                          ),
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                            color: AppColors.textSecondary,
-                            size: 12,
-                          ),
-                        ],
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              color: AppColors.textSecondary,
+                              size: 12,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),
