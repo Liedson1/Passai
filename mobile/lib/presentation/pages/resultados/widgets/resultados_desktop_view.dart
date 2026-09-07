@@ -41,10 +41,11 @@ class ResultadosDesktopView extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
         child: Column(
           children: [
             // 1. Barra de Navegação Superior
-            const WebNavbar(),
+            const RepaintBoundary(child: WebNavbar()),
 
             // 2. Sub-header com Botão Voltar e Título da Rota
             Container(
@@ -411,12 +412,15 @@ class ResultadosDesktopView extends ConsumerWidget {
                             return Column(
                               children: filtrados.map((horario) {
                                 return Padding(
+                                  key: ValueKey(horario.id),
                                   padding: const EdgeInsets.only(bottom: 14),
-                                  child: _DesktopViagemCard(
-                                    horario: horario,
-                                    origem: origemExibida,
-                                    destino: destinoExibido,
-                                    precoStr: precoPadraoStr,
+                                  child: RepaintBoundary(
+                                    child: _DesktopViagemCard(
+                                      horario: horario,
+                                      origem: origemExibida,
+                                      destino: destinoExibido,
+                                      precoStr: precoPadraoStr,
+                                    ),
                                   ),
                                 );
                               }).toList(),
@@ -433,7 +437,7 @@ class ResultadosDesktopView extends ConsumerWidget {
             const SizedBox(height: 64),
 
             // 4. Rodapé Escuro Institucional
-            const WebFooter(),
+            const RepaintBoundary(child: WebFooter()),
           ],
         ),
       ),

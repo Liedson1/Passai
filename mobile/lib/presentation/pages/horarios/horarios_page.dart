@@ -69,7 +69,9 @@ class _HorariosPageState extends ConsumerState<HorariosPage> {
           } catch (_) {}
         },
         child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: const ClampingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
             _AppBar(rota: widget.rota, sentido: sentido),
             SliverToBoxAdapter(
@@ -290,21 +292,36 @@ class _HorariosList extends StatelessWidget {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       sliver: SliverList(
-        delegate: SliverChildListDelegate([
-          // Banner de aviso quando há alterações no dia
-          if (numAlterados > 0)
-            _AlteracaoBanner(quantidade: numAlterados),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (numAlterados > 0) {
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _AlteracaoBanner(quantidade: numAlterados),
+                );
+              }
+              final horario = horarios[index - 1];
+              return Padding(
+                key: ValueKey(horario.id),
+                padding: const EdgeInsets.only(bottom: 10),
+                child: RepaintBoundary(
+                  child: HorarioTile(horario: horario),
+                ),
+              );
+            }
 
-          const SizedBox(height: 12),
-
-          ...List.generate(horarios.length, (index) {
+            final horario = horarios[index];
             return Padding(
-              key: ValueKey(horarios[index].id),
+              key: ValueKey(horario.id),
               padding: const EdgeInsets.only(bottom: 10),
-              child: HorarioTile(horario: horarios[index]),
+              child: RepaintBoundary(
+                child: HorarioTile(horario: horario),
+              ),
             );
-          }),
-        ]),
+          },
+          childCount: numAlterados > 0 ? horarios.length + 1 : horarios.length,
+        ),
       ),
     );
   }

@@ -44,7 +44,9 @@ class HomePage extends ConsumerWidget {
           } catch (_) {}
         },
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: const ClampingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           child: Column(
             children: [
               RepaintBoundary(child: _HeroBanner()),

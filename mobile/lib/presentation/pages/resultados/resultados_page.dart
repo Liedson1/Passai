@@ -88,7 +88,9 @@ class _ResultadosPageState extends ConsumerState<ResultadosPage> {
             } catch (_) {}
           },
           child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+            physics: const ClampingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
             slivers: [
               // AppBar com info da rota
               _ResultadosAppBar(
@@ -294,34 +296,44 @@ class _ResultadosList extends StatelessWidget {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       sliver: SliverList(
-        delegate: SliverChildListDelegate([
-          // Contador de resultados
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              '${horarios.length} horário${horarios.length > 1 ? 's' : ''} encontrado${horarios.length > 1 ? 's' : ''}',
-              style: AppTextStyles.bodySemibold(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == 0) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Contador de resultados
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      '${horarios.length} horário${horarios.length > 1 ? 's' : ''} encontrado${horarios.length > 1 ? 's' : ''}',
+                      style: AppTextStyles.bodySemibold(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
 
-          // Banner de aviso quando há alterações no dia (RN06)
-          if (numAlterados > 0) ...[
-            _AlteracaoBanner(quantidade: numAlterados),
-            const SizedBox(height: 12),
-          ],
+                  // Banner de aviso quando há alterações no dia (RN06)
+                  if (numAlterados > 0) ...[
+                    _AlteracaoBanner(quantidade: numAlterados),
+                    const SizedBox(height: 12),
+                  ],
+                ],
+              );
+            }
 
-          // Cards de resultado
-          ...List.generate(horarios.length, (index) {
+            final horario = horarios[index - 1];
             return Padding(
-              key: ValueKey(horarios[index].id),
+              key: ValueKey(horario.id),
               padding: const EdgeInsets.only(bottom: 10),
-              child: ResultadoCard(horario: horarios[index]),
+              child: RepaintBoundary(
+                child: ResultadoCard(horario: horario),
+              ),
             );
-          }),
-        ]),
+          },
+          childCount: horarios.length + 1,
+        ),
       ),
     );
   }

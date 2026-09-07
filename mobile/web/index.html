@@ -32,12 +32,12 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <!-- Google Fonts: Preconnect Jua (Fonte oficial da logo) - Não-bloqueante -->
+  <!-- Google Fonts: Jua (Logo), Outfit (Títulos), Manrope (Corpo) - Pré-carregamento completo -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" as="style">
-  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet"></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Jua&family=Manrope:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" as="style">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Manrope:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Jua&family=Manrope:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet"></noscript>
 
   <!-- CanvasKit & Skwasm CDN Preconnect (Acelera inicialização do motor WebAssembly) -->
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -61,12 +61,15 @@
       margin: 0;
       padding: 0;
     }
-    body {
+    html, body {
       background-color: #F9F6F0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       overflow: hidden;
       margin: 0;
       padding: 0;
+      touch-action: pan-y;
+      overscroll-behavior: none;
+      -webkit-overscroll-behavior: none;
     }
     #splash-loading {
       position: fixed;

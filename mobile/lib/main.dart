@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -188,6 +189,25 @@ final _router = GoRouter(
   ],
 );
 
+/// Comportamento de rolagem customizado: física sem deformação de malha (Clamping)
+/// e suporte completo a toque, mouse e trackpad.
+class PassaiScrollBehavior extends MaterialScrollBehavior {
+  const PassaiScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const ClampingScrollPhysics();
+  }
+}
+
 class PassaiApp extends StatelessWidget {
   const PassaiApp({super.key});
 
@@ -197,6 +217,7 @@ class PassaiApp extends StatelessWidget {
       title: 'Passaí',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      scrollBehavior: const PassaiScrollBehavior(),
       routerConfig: _router,
     );
   }
