@@ -28,12 +28,12 @@ class BuscarRotas {
     final todasAsRotas = await _repository.buscarTodasAsRotas();
     final resultados = <RotaSearchResult>[];
 
-    final origemNorm = _normalizar(origem);
-    final destinoNorm = _normalizar(destino);
+    final origemNorm = normalizar(origem);
+    final destinoNorm = normalizar(destino);
 
     for (final rota in todasAsRotas) {
-      final rotaOrigemNorm = _normalizar(rota.origem);
-      final rotaDestinoNorm = _normalizar(rota.destino);
+      final rotaOrigemNorm = normalizar(rota.origem);
+      final rotaDestinoNorm = normalizar(rota.destino);
 
       // Sentido direto (origem -> destino = IDA)
       if (rotaOrigemNorm == origemNorm && rotaDestinoNorm == destinoNorm) {
@@ -49,7 +49,8 @@ class BuscarRotas {
   }
 
   /// Normaliza texto removendo acentos, espaços extras e convertendo para minúsculas.
-  static String _normalizar(String str) {
+  /// Público para permitir testes unitários diretos.
+  static String normalizar(String str) {
     return str
         .trim()
         .toLowerCase()

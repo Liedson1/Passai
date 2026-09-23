@@ -4,9 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
+import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
+import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/providers/resultados_provider.dart';
+import 'package:passai/core/utils/filtro_periodo_utils.dart';
 import 'package:passai/presentation/widgets/date_selector.dart';
 import 'package:passai/presentation/widgets/period_filter.dart';
 import 'package:passai/presentation/widgets/responsive_shell.dart';
@@ -141,7 +145,7 @@ class _ResultadosPageState extends ConsumerState<ResultadosPage> {
                   ),
                 ),
                 data: (horarios) {
-                  final filtrados = filtrarPorPeriodo(horarios, filtro);
+                  final filtrados = FiltroPeriodoUtils.filtrar(horarios, filtro);
 
                   if (filtrados.isEmpty) {
                     return SliverFillRemaining(
@@ -151,7 +155,13 @@ class _ResultadosPageState extends ConsumerState<ResultadosPage> {
                     );
                   }
 
-                  return _ResultadosList(horarios: filtrados);
+                  return _ResultadosList(
+                    horarios: filtrados,
+                    rota: rota,
+                    sentido: sentido,
+                    origem: origemExibida,
+                    destino: destinoExibido,
+                  );
                 },
               ),
             ],
@@ -284,9 +294,19 @@ class _ResultadosAppBar extends StatelessWidget {
 // Lista de resultados
 // ---------------------------------------------------------------------------
 class _ResultadosList extends StatelessWidget {
-  const _ResultadosList({required this.horarios});
+  const _ResultadosList({
+    required this.horarios,
+    required this.rota,
+    required this.sentido,
+    required this.origem,
+    required this.destino,
+  });
 
   final List<Horario> horarios;
+  final Rota rota;
+  final Sentido sentido;
+  final String origem;
+  final String destino;
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +348,48 @@ class _ResultadosList extends StatelessWidget {
               key: ValueKey(horario.id),
               padding: const EdgeInsets.only(bottom: 10),
               child: RepaintBoundary(
-                child: ResultadoCard(horario: horario),
+                child: ResultadoCard(
+                  horario: horario,
+                  onVerDetalhes: () {
+                    final precoFormatado = horario.preco != null
+                        ? 'R\$ ${horario.preco!.toStringAsFixed(2).replaceAll('.', ',')}'
+                        : (rota.tarifa != null
+                            ? 'R\$ ${rota.tarifa!.toStringAsFixed(2).replaceAll('.', ',')}'
+                            : 'Consulte');
+
+                    final itinerarioFallback = [
+                      ParadaItinerario(
+                        parada: origem,
+                        horario: horario.hora,
+                        descricao: 'Partida',
+                      ),
+                      ParadaItinerario(
+                        parada: destino,
+                        horario: '',
+                        descricao: 'Chegada',
+                      ),
+                    ];
+
+                    final detalhes = DetalhesViagem(
+                      codigo: horario.nomeRota ?? rota.linha,
+                      preco: precoFormatado,
+                      rota: '$origem x $destino',
+                      itinerario: itinerarioFallback,
+                      horaSaida: horario.hora,
+                      tipoLinha: 'Linha Intermunicipal',
+                      via: rota.via,
+                    );
+
+                    context.push(
+                      AppRoutes.detalhesViagem,
+                      extra: DetalhesViagemArgs(
+                        detalhes: detalhes,
+                        rotaId: rota.id,
+                        sentido: sentido == Sentido.ida ? 'IDA' : 'VOLTA',
+                      ),
+                    );
+                  },
+                ),
               ),
             );
           },

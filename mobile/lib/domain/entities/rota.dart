@@ -44,5 +44,31 @@ class Rota {
     }
     return null;
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Rota &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          linha == other.linha &&
+          origem == other.origem &&
+          destino == other.destino &&
+          diasOperacao == other.diasOperacao &&
+          distanciaKm == other.distanciaKm &&
+          tarifa == other.tarifa &&
+          seccionamentos == other.seccionamentos;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        linha,
+        origem,
+        destino,
+        diasOperacao,
+        distanciaKm,
+        tarifa,
+        seccionamentos,
+      );
 }
 

@@ -5,8 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/domain/entities/horario.dart';
+import 'package:passai/domain/entities/detalhes_viagem.dart';
+import 'package:passai/domain/entities/parada_itinerario.dart';
+import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/resultados_provider.dart';
+import 'package:passai/core/utils/filtro_periodo_utils.dart';
 import 'package:passai/presentation/widgets/web/web_footer.dart';
 import 'package:passai/presentation/widgets/web/web_navbar.dart';
 
@@ -370,7 +374,7 @@ class ResultadosDesktopView extends ConsumerWidget {
                             ),
                           ),
                           data: (horarios) {
-                            final filtrados = filtrarPorPeriodo(horarios, filtro);
+                            final filtrados = FiltroPeriodoUtils.filtrar(horarios, filtro);
 
                             if (filtrados.isEmpty) {
                               return Container(
@@ -420,6 +424,8 @@ class ResultadosDesktopView extends ConsumerWidget {
                                       origem: origemExibida,
                                       destino: destinoExibido,
                                       precoStr: precoPadraoStr,
+                                      rotaId: rota.id,
+                                      sentido: sentido == Sentido.ida ? 'IDA' : 'VOLTA',
                                     ),
                                   ),
                                 );
@@ -454,12 +460,16 @@ class _DesktopViagemCard extends StatelessWidget {
     required this.origem,
     required this.destino,
     required this.precoStr,
+    required this.rotaId,
+    required this.sentido,
   });
 
   final Horario horario;
   final String origem;
   final String destino;
   final String precoStr;
+  final int rotaId;
+  final String sentido;
 
   @override
   Widget build(BuildContext context) {
@@ -598,10 +608,41 @@ class _DesktopViagemCard extends StatelessWidget {
               // Botão Ver no Mapa / Detalhes
               OutlinedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Linha: $origem → $destino às ${horario.hora}'),
-                      duration: const Duration(seconds: 2),
+                  final precoFormatado = horario.preco != null
+                      ? 'R\$ ${horario.preco!.toStringAsFixed(2).replaceAll('.', ',')}'
+                      : precoStr;
+
+                  // Itinerário estático mínimo (partida + chegada)
+                  // A tela de detalhes buscará as paradas reais do Supabase
+                  // usando rotaId e sentido
+                  final itinerarioFallback = [
+                    ParadaItinerario(
+                      parada: origem,
+                      horario: horario.hora,
+                      descricao: 'Partida',
+                    ),
+                    ParadaItinerario(
+                      parada: destino,
+                      horario: '',
+                      descricao: 'Chegada',
+                    ),
+                  ];
+
+                  final detalhes = DetalhesViagem(
+                    codigo: horario.nomeRota ?? '$origem x $destino',
+                    preco: precoFormatado,
+                    rota: '$origem x $destino',
+                    itinerario: itinerarioFallback,
+                    horaSaida: horario.hora,
+                    tipoLinha: 'Linha Intermunicipal',
+                  );
+
+                  context.push(
+                    AppRoutes.detalhesViagem,
+                    extra: DetalhesViagemArgs(
+                      detalhes: detalhes,
+                      rotaId: rotaId,
+                      sentido: sentido,
                     ),
                   );
                 },

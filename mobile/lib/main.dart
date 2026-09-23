@@ -11,12 +11,14 @@ import 'core/network/supabase_client.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'domain/entities/rota.dart';
-import 'presentation/pages/auth/sign_in_page.dart';
-import 'presentation/pages/auth/sign_up_page.dart';
+// Páginas de auth mantidas no filesystem para uso futuro, não importadas no MVP (RN07)
+// import 'presentation/pages/auth/sign_in_page.dart';
+// import 'presentation/pages/auth/sign_up_page.dart';
 import 'presentation/pages/home/home_page.dart';
 import 'presentation/pages/horarios/horarios_page.dart';
 import 'core/utils/url_strategy/url_strategy.dart';
 import 'presentation/pages/resultados/resultados_page.dart';
+import 'presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 
 import 'core/theme/app_colors.dart';
 import 'presentation/widgets/responsive_shell.dart';
@@ -62,14 +64,6 @@ final _router = GoRouter(
     GoRoute(
       path: AppRoutes.home,
       builder: (context, state) => const HomePage(),
-    ),
-    GoRoute(
-      path: AppRoutes.signIn,
-      builder: (context, state) => const SignInPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.signUp,
-      builder: (context, state) => const SignUpPage(),
     ),
     GoRoute(
       path: AppRoutes.horarios,
@@ -167,6 +161,63 @@ final _router = GoRouter(
                     const SizedBox(height: 8),
                     const Text(
                       'Ao recarregar a página web, selecione a origem e o destino novamente.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                      ),
+                      onPressed: () => context.go(AppRoutes.home),
+                      icon: const Icon(Icons.home_outlined),
+                      label: const Text('Voltar ao início'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.detalhesViagem,
+      builder: (context, state) {
+        final extra = state.extra;
+        if (extra is DetalhesViagemArgs) {
+          return DetalhesViagemPage(args: extra);
+        }
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: ResponsiveShell(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.route_rounded,
+                      size: 56,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Viagem não encontrada',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Selecione uma viagem a partir da tela de resultados.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,

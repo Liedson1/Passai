@@ -1,8 +1,8 @@
-// Passaí — PWA Service Worker Oficial
-// Garante conformidade com critérios de instalabilidade PWA do Chromium (Chrome/Edge/Android)
-// e resiliência offline para o shell da aplicação.
+// Passaí — PWA Service Worker Oficial de Alta Performance
+// Garante conformidade com critérios de instalabilidade PWA do Chromium (Chrome/Edge/Android/iOS)
+// e desempenho instantâneo com estratégia Cache-First para assets estáticos locais do Flutter.
 
-const CACHE_NAME = 'passai-pwa-v2';
+const CACHE_NAME = 'passai-pwa-v7';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
@@ -38,11 +38,11 @@ self.addEventListener('activate', (event) => {
 });
 
 // Interceptação de requisições:
-// - Requisições da aplicação usam Network-First para garantir que novas versões e dados do Supabase
-//   sejam sempre servidos em tempo real.
-// - Em caso de perda de conexão (offline), recorre ao cache local de assets estáticos e da casca da página.
+// 1. Static Assets (Wasm, JS, Fontes TTF/OTF, Imagens, JSON) -> Cache-First:
+//    Retorna imediatamente do cache (0ms), eliminando travamentos de rede e gargalos de IPC.
+// 2. Navegação / HTML -> Network-First com fallback para cache offline.
+// 3. Supabase / APIs Externas -> Não intercepta (Network pura).
 self.addEventListener('fetch', (event) => {
-  // Apenas métodos GET são cacheados
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
@@ -52,18 +52,55 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Identifica se é um asset estático do Flutter ou da aplicação
+  const pathname = url.pathname;
+  const isStaticAsset =
+    pathname.endsWith('.js') ||
+    pathname.endsWith('.wasm') ||
+    pathname.endsWith('.ttf') ||
+    pathname.endsWith('.otf') ||
+    pathname.endsWith('.woff') ||
+    pathname.endsWith('.woff2') ||
+    pathname.endsWith('.png') ||
+    pathname.endsWith('.jpg') ||
+    pathname.endsWith('.jpeg') ||
+    pathname.endsWith('.svg') ||
+    pathname.endsWith('.ico') ||
+    pathname.endsWith('.json') ||
+    pathname.includes('/canvaskit/') ||
+    pathname.includes('/assets/') ||
+    pathname.includes('/icons/');
+
+  // Estratégia Cache-First para recursos estáticos:
+  // Se já estiver em cache, serve instantaneamente sem requisição de rede.
+  // Se não estiver, busca na rede, armazena no cache e retorna.
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // Estratégia Network-First para documentos e páginas de navegação:
+  // Tenta obter o HTML mais atualizado; em caso de falha ou offline, usa a casca em cache.
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
-        // Cacheia dinamicamente apenas recursos estáticos locais (ícones, manifest, imagens)
-        if (
-          networkResponse &&
-          networkResponse.status === 200 &&
-          (url.pathname.startsWith('/icons/') ||
-           url.pathname.endsWith('.png') ||
-           url.pathname.endsWith('.svg') ||
-           url.pathname.endsWith('manifest.json'))
-        ) {
+        if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -72,13 +109,11 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(async () => {
-        // Fallback offline
         const cachedResponse = await caches.match(event.request);
         if (cachedResponse) {
           return cachedResponse;
         }
 
-        // Se for navegação de rota/página e estiver offline, retorna o index.html em cache
         if (event.request.mode === 'navigate') {
           const indexCached = await caches.match('./index.html') || await caches.match('./');
           if (indexCached) {

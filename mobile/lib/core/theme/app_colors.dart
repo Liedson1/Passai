@@ -34,6 +34,10 @@ class AppColors {
   static const Color warning = Color(0xFFE67E22);
   static const Color warningLight = Color(0xFFFFF3E0);
 
+  // Amber — usado no card de benefício "Sem Surpresas"
+  static const Color amber = Color(0xFFB45309);
+  static const Color amberLight = Color(0xFFFEF3C7);
+
   // Seletor de data
   static const Color dateChipActive = primary;
   static const Color dateChipInactive = Color(0xFFF5F0E8);

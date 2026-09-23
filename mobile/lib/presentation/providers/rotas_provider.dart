@@ -103,15 +103,9 @@ final rotasBuscadasComSentidoProvider =
       );
 });
 
-/// Resultado da busca de rotas (origem → destino)
-final rotasBuscadasProvider = FutureProvider<List<Rota>>((ref) async {
-  final origem = ref.watch(origemSelecionadaProvider);
-  final destino = ref.watch(destinoSelecionadoProvider);
-
-  if (origem == null || destino == null) return [];
-
-  return ref.watch(buscarRotasUsecaseProvider).call(
-        origem: origem,
-        destino: destino,
-      );
+/// Resultado da busca de rotas (origem → destino) — derivado sem fetch extra.
+/// Extraído de [rotasBuscadasComSentidoProvider] para evitar chamada duplicada ao banco.
+final rotasBuscadasProvider = Provider<List<Rota>>((ref) {
+  final resultados = ref.watch(rotasBuscadasComSentidoProvider).valueOrNull ?? const <RotaSearchResult>[];
+  return resultados.map((r) => r.rota).toList();
 });

@@ -86,5 +86,36 @@ void main() {
       expect(find.text('1h 10m'), findsOneWidget);
       expect(find.text('4 paradas'), findsOneWidget);
     });
+
+    testWidgets('Deve exibir botão Ver Rota no Mapa e chamar callback ao tocar',
+        (tester) async {
+      bool clicouDetalhes = false;
+      const horarioMock = Horario(
+        id: 3,
+        hora: '14:00',
+        sentido: Sentido.ida,
+        preco: 20.00,
+        duracao: '50 min',
+        paradas: 'Direto',
+        nomeRota: 'Arapiraca x Maceió',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResultadoCard(
+              horario: horarioMock,
+              onVerDetalhes: () => clicouDetalhes = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Ver Rota no Mapa'), findsOneWidget);
+      await tester.tap(find.text('Ver Rota no Mapa'));
+      await tester.pump();
+
+      expect(clicouDetalhes, isTrue);
+    });
   });
 }

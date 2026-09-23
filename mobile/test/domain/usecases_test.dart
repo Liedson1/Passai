@@ -155,5 +155,28 @@ void main() {
       expect(resultado.length, 2);
       expect(resultado.first.hora, '06:00');
     });
+
+    // ── Testes de BuscarRotas.normalizar ───────────────────────────────────
+
+    group('BuscarRotas.normalizar', () {
+      test('remove acentos de todas as vogais', () {
+        expect(BuscarRotas.normalizar('ÁáÀàÃãÂâÄä'), equals('aaaaaaaaaa'));
+        expect(BuscarRotas.normalizar('ÉéÈèÊêËë'),   equals('eeeeeeee'));
+        expect(BuscarRotas.normalizar('ÍíÌìÎîÏï'),   equals('iiiiiiii'));
+        expect(BuscarRotas.normalizar('ÓóÒòÕõÔôÖö'), equals('oooooooooo'));
+        expect(BuscarRotas.normalizar('ÚúÙùÛûÜü'),   equals('uuuuuuuu'));
+        expect(BuscarRotas.normalizar('Çç'),          equals('cc'));
+      });
+
+      test('converte para minúsculas e remove espaços extras', () {
+        expect(BuscarRotas.normalizar('  ÁGUA BRANCA  '), equals('agua branca'));
+      });
+
+      test('permite busca sem acento encontrar cidade com acento', () {
+        final maceio = BuscarRotas.normalizar('Maceió');
+        final input  = BuscarRotas.normalizar('maceio');
+        expect(maceio, equals(input));
+      });
+    });
   });
 }

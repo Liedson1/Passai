@@ -5,8 +5,11 @@ import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/errors/exceptions.dart';
+import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
+import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
+import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/popular_route_card.dart';
@@ -791,6 +794,7 @@ class _RotaDestaqueConfig {
   final String descricao;
   final double? precoPadrao;
   final int fallbackId;
+  final String horarioSaida;
 
   const _RotaDestaqueConfig({
     required this.origem,
@@ -799,6 +803,7 @@ class _RotaDestaqueConfig {
     required this.descricao,
     this.precoPadrao,
     required this.fallbackId,
+    this.horarioSaida = '06:00',
   });
 }
 
@@ -816,6 +821,7 @@ class _RotasPopularesSection extends ConsumerWidget {
       descricao: 'Dois maiores polos do estado • via Litoral',
       precoPadrao: 36.00,
       fallbackId: 6,
+      horarioSaida: '06:00',
     ),
     _RotaDestaqueConfig(
       origem: 'Arapiraca',
@@ -823,6 +829,7 @@ class _RotasPopularesSection extends ConsumerWidget {
       descricao: 'Importante ligação do Sertão',
       precoPadrao: 28.00,
       fallbackId: 54,
+      horarioSaida: '06:30',
     ),
     _RotaDestaqueConfig(
       origem: 'Palmeira dos Índios',
@@ -830,6 +837,7 @@ class _RotasPopularesSection extends ConsumerWidget {
       descricao: 'Cidades próximas, fluxo constante',
       precoPadrao: 10.00,
       fallbackId: 67,
+      horarioSaida: '05:30',
     ),
     _RotaDestaqueConfig(
       origem: 'Água Branca',
@@ -838,6 +846,7 @@ class _RotasPopularesSection extends ConsumerWidget {
       descricao: 'Linha tradicional do Alto Sertão',
       precoPadrao: 12.00,
       fallbackId: 2,
+      horarioSaida: '15:10',
     ),
     _RotaDestaqueConfig(
       origem: 'Delmiro Gouveia',
@@ -845,6 +854,7 @@ class _RotasPopularesSection extends ConsumerWidget {
       descricao: 'Ligação Alto Sertão ao Agreste',
       precoPadrao: 29.30,
       fallbackId: 26,
+      horarioSaida: '13:40',
     ),
   ];
 
@@ -924,6 +934,7 @@ class _RotasPopularesSection extends ConsumerWidget {
                     from: config.origem,
                     to: config.destino,
                     via: config.via,
+                    nextTime: config.horarioSaida,
                     price: precoStr,
                     subtitle: config.descricao,
                   ),
@@ -934,6 +945,43 @@ class _RotasPopularesSection extends ConsumerWidget {
                       sentido: sentido,
                     ),
                   ),
+                  onVerDetalhes: () {
+                    final itinerarioFallback = [
+                      ParadaItinerario(
+                        parada: config.origem,
+                        horario: config.horarioSaida,
+                        descricao: 'Partida',
+                      ),
+                      ParadaItinerario(
+                        parada: config.destino,
+                        horario: '',
+                        descricao: 'Chegada',
+                      ),
+                    ];
+
+                    final detalhes = DetalhesViagem(
+                      codigo: rota.linha,
+                      preco: precoStr,
+                      rota: '${config.origem} x ${config.destino}',
+                      itinerario: itinerarioFallback,
+                      horaSaida: config.horarioSaida,
+                      tipoLinha: 'Linha Intermunicipal',
+                      via: config.via != null
+                          ? (config.via!.toLowerCase().startsWith('via')
+                              ? config.via!
+                              : 'Via ${config.via!}')
+                          : null,
+                    );
+
+                    context.push(
+                      AppRoutes.detalhesViagem,
+                      extra: DetalhesViagemArgs(
+                        detalhes: detalhes,
+                        rotaId: rota.id,
+                        sentido: sentido == Sentido.ida ? 'IDA' : 'VOLTA',
+                      ),
+                    );
+                  },
                 );
               }(),
             ],

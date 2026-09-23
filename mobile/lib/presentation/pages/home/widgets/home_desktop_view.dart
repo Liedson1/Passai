@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/errors/exceptions.dart';
 import 'package:passai/core/theme/app_colors.dart';
+import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
+import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
+import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/web/web_footer.dart';
@@ -525,6 +528,43 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                             via: destaque.via,
                             preco: precoFormatado,
                             horarioSaida: destaque.horarioSaida,
+                            onVerDetalhes: () {
+                              final itinerarioFallback = [
+                                ParadaItinerario(
+                                  parada: destaque.origem,
+                                  horario: destaque.horarioSaida,
+                                  descricao: 'Partida',
+                                ),
+                                ParadaItinerario(
+                                  parada: destaque.destino,
+                                  horario: '',
+                                  descricao: 'Chegada',
+                                ),
+                              ];
+
+                              final detalhes = DetalhesViagem(
+                                codigo: rotaFinal.linha,
+                                preco: precoFormatado,
+                                rota: '${destaque.origem} x ${destaque.destino}',
+                                itinerario: itinerarioFallback,
+                                horaSaida: destaque.horarioSaida,
+                                tipoLinha: 'Linha Intermunicipal',
+                                via: destaque.via != null
+                                    ? (destaque.via!.toLowerCase().startsWith('via')
+                                        ? destaque.via!
+                                        : 'Via ${destaque.via!}')
+                                    : null,
+                              );
+
+                              context.push(
+                                AppRoutes.detalhesViagem,
+                                extra: DetalhesViagemArgs(
+                                  detalhes: detalhes,
+                                  rotaId: rotaFinal.id,
+                                  sentido: sentido == Sentido.ida ? 'IDA' : 'VOLTA',
+                                ),
+                              );
+                            },
                             onTap: () {
                               context.push(
                                 AppRoutes.resultados,
@@ -567,6 +607,7 @@ class _DesktopRouteCard extends StatefulWidget {
     required this.preco,
     required this.horarioSaida,
     required this.onTap,
+    required this.onVerDetalhes,
   });
 
   final String origem;
@@ -575,6 +616,7 @@ class _DesktopRouteCard extends StatefulWidget {
   final String preco;
   final String horarioSaida;
   final VoidCallback onTap;
+  final VoidCallback onVerDetalhes;
 
   @override
   State<_DesktopRouteCard> createState() => _DesktopRouteCardState();
@@ -659,21 +701,64 @@ class _DesktopRouteCardState extends State<_DesktopRouteCard> {
                 ],
               ),
 
-              // Badge de Preço
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  widget.preco,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+              // Ações: Preço + Botão Ver Rota no Mapa + Botão Ver Horários
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Badge de Preço
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      widget.preco,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  // Botão Ver Rota no Mapa
+                  OutlinedButton.icon(
+                    onPressed: widget.onVerDetalhes,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.map_outlined, size: 15),
+                    label: const Text(
+                      'Ver Rota no Mapa',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Botão Ver Horários
+                  ElevatedButton.icon(
+                    onPressed: widget.onTap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    icon: const Icon(Icons.schedule_rounded, size: 15),
+                    label: const Text(
+                      'Ver Horários',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

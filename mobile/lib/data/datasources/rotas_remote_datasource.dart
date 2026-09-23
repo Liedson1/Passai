@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/errors/exceptions.dart';
 import 'package:passai/core/network/supabase_client.dart';
 import 'package:passai/data/models/horario_model.dart';
+import 'package:passai/data/models/parada_rota_model.dart';
 import 'package:passai/data/models/rota_model.dart';
+
 
 /// Responsável por todas as queries ao Supabase.
 /// Não contém lógica de negócio — apenas acesso remoto a dados.
@@ -14,15 +17,24 @@ class RotasRemoteDatasource {
 
   /// Trata exceções de rede e converte para [NetworkException] ou [ServerException].
   Exception _handleError(Object error) {
-    if (error is SocketException ||
-        error is TimeoutException ||
-        error.toString().toLowerCase().contains('socket') ||
-        error.toString().toLowerCase().contains('failed host lookup') ||
-        error.toString().toLowerCase().contains('network is unreachable') ||
-        error.toString().toLowerCase().contains('connection refused') ||
-        error.toString().toLowerCase().contains('connection reset') ||
-        error.toString().toLowerCase().contains('timed out') ||
-        error.toString().toLowerCase().contains('clientexception')) {
+    // Verifica tipo explícito antes de recorrer ao string matching
+    if (error is SocketException || error is TimeoutException) {
+      return const NetworkException(
+        'Sem conexão com a internet. O Passaí precisa de conexão ativa para consultar os horários em tempo real.',
+      );
+    }
+    // Fallback: erros de rede que chegam como mensagens genéricas
+    final msg = error.toString().toLowerCase();
+    const networkKeywords = [
+      'socket',
+      'failed host lookup',
+      'network is unreachable',
+      'connection refused',
+      'connection reset',
+      'timed out',
+      'clientexception',
+    ];
+    if (networkKeywords.any(msg.contains)) {
       return const NetworkException(
         'Sem conexão com a internet. O Passaí precisa de conexão ativa para consultar os horários em tempo real.',
       );
@@ -45,7 +57,11 @@ class RotasRemoteDatasource {
             destino:cidades!rotas_destino_id_fkey(nome)
           ''')
           .eq('ativa', true)
-          .neq('id', 100) // Rota 100 (Palmeira dos Índios - Maceió) não possui horários cadastrados
+          .not(
+            'id',
+            'in',
+            '(${AppConstants.rotasSemHorarioIds.join(',')})',
+          )
           .timeout(_timeout);
 
       final rotas = (response as List)
@@ -143,5 +159,29 @@ class RotasRemoteDatasource {
   }) async {
     final todosHorarios = await fetchHorarios(rotaId: rotaId, sentido: sentido);
     return todosHorarios.where((h) => h.toEntity().operaNoDia(data)).toList();
+  }
+
+  /// Busca as paradas do itinerário de uma rota/sentido, ordenadas por [ordem].
+  /// Retorna lista vazia quando a rota não possui paradas cadastradas,
+  /// permitindo fallback gracioso na camada de apresentação.
+  Future<List<ParadaRotaModel>> fetchParadasRota({
+    required int rotaId,
+    required String sentido,
+  }) async {
+    try {
+      final response = await supabase
+          .from('paradas_rota')
+          .select('id, rota_id, sentido, ordem, cidade, descricao')
+          .eq('rota_id', rotaId)
+          .eq('sentido', sentido)
+          .order('ordem', ascending: true)
+          .timeout(_timeout);
+
+      return (response as List)
+          .map((json) => ParadaRotaModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 }

@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:passai/core/utils/filtro_periodo_utils.dart';
 import 'package:passai/domain/entities/horario.dart';
 import 'package:passai/domain/usecases/buscar_horarios_por_data.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
+
+export 'package:passai/core/utils/filtro_periodo_utils.dart'
+    show FiltroPeriodo, FiltroPeriodoUtils;
 
 // ---------------------------------------------------------------------------
 // Use case
@@ -22,8 +26,6 @@ final dataSelecionadaProvider = StateProvider<DateTime>(
 );
 
 /// Filtro de período ativo
-enum FiltroPeriodo { todos, manha, tarde, noite }
-
 final filtroPeriodoProvider = StateProvider<FiltroPeriodo>(
   (_) => FiltroPeriodo.todos,
 );
@@ -56,12 +58,13 @@ class ResultadosParams {
           data.day == other.data.day;
 
   @override
-  int get hashCode =>
-      rotaId.hashCode ^
-      sentido.hashCode ^
-      data.year.hashCode ^
-      data.month.hashCode ^
-      data.day.hashCode;
+  int get hashCode => Object.hash(
+        rotaId,
+        sentido,
+        data.year,
+        data.month,
+        data.day,
+      );
 }
 
 // ---------------------------------------------------------------------------
@@ -76,32 +79,6 @@ final resultadosHorariosProvider =
         data: params.data,
       );
 });
-
-// ---------------------------------------------------------------------------
-// Filtragem por período do dia
-// ---------------------------------------------------------------------------
-
-/// Filtra horários por período (manhã, tarde, noite)
-List<Horario> filtrarPorPeriodo(List<Horario> horarios, FiltroPeriodo filtro) {
-  if (filtro == FiltroPeriodo.todos) return horarios;
-
-  return horarios.where((h) {
-    final partes = h.hora.split(':');
-    if (partes.length < 2) return true;
-    final horaInt = int.tryParse(partes[0]) ?? 0;
-
-    switch (filtro) {
-      case FiltroPeriodo.manha:
-        return horaInt < 12;
-      case FiltroPeriodo.tarde:
-        return horaInt >= 12 && horaInt < 18;
-      case FiltroPeriodo.noite:
-        return horaInt >= 18 && horaInt <= 23;
-      case FiltroPeriodo.todos:
-        return true;
-    }
-  }).toList();
-}
 
 // ---------------------------------------------------------------------------
 // Modelo do seletor de datas

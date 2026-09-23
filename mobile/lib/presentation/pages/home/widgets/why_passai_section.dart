@@ -67,8 +67,8 @@ class WhyPassaiSection extends StatelessWidget {
     _BeneficioItem(
       icon: Icons.payments_outlined,
       tag: 'Sem Surpresas',
-      tagColor: Color(0xFFB45309), // Amber dark
-      tagBgColor: Color(0xFFFEF3C7), // Amber light
+      tagColor: AppColors.amber,
+      tagBgColor: AppColors.amberLight,
       titulo: 'Preço certo antes de sair de casa',
       descricao:
           'Consulte o valor exato da tarifa com antecedência. Sem surpresas ou dúvidas de quanto vai custar a passagem no momento do embarque.',
