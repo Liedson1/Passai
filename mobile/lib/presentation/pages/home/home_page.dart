@@ -34,31 +34,36 @@ class HomePage extends ConsumerWidget {
     return ResponsiveShell(
       child: Scaffold(
         backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: () async {
-          ref.invalidate(cidadesProvider);
-          ref.invalidate(todasAsRotasProvider);
-          try {
-            await Future.wait([
-              ref.read(cidadesProvider.future),
-              ref.read(todasAsRotasProvider.future),
-            ]);
-          } catch (_) {}
-        },
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          child: Column(
-            children: [
-              RepaintBoundary(child: _HeroBanner()),
-              _BodyContent(),
+        body: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            ref.invalidate(cidadesProvider);
+            ref.invalidate(todasAsRotasProvider);
+            try {
+              await Future.wait([
+                ref.read(cidadesProvider.future),
+                ref.read(todasAsRotasProvider.future),
+              ]);
+            } catch (_) {}
+          },
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            slivers: [
+              SliverToBoxAdapter(
+                child: _HeroBanner(),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.all(20),
+                sliver: SliverToBoxAdapter(
+                  child: _BodyContent(),
+                ),
+              ),
             ],
           ),
         ),
       ),
-    ),
     );
   }
 }
@@ -184,39 +189,37 @@ class _BodyContent extends ConsumerWidget {
                 ),
               ),
             ),
-          const RepaintBoundary(child: _SearchCard()),
+          const _SearchCard(),
           const SizedBox(height: 16),
-          const RepaintBoundary(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  HeroTrustBadge(
-                    icon: Icons.check_circle_outline_rounded,
-                    label: '100% gratuito e sem cadastro',
-                    isLight: false,
-                  ),
-                  SizedBox(width: 8),
-                  HeroTrustBadge(
-                    icon: Icons.update_rounded,
-                    label: 'Horários do dia atualizados',
-                    isLight: false,
-                  ),
-                  SizedBox(width: 8),
-                  HeroTrustBadge(
-                    icon: Icons.payments_outlined,
-                    label: 'Tarifas oficiais de Alagoas',
-                    isLight: false,
-                  ),
-                ],
-              ),
+          const SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                HeroTrustBadge(
+                  icon: Icons.check_circle_outline_rounded,
+                  label: '100% gratuito e sem cadastro',
+                  isLight: false,
+                ),
+                SizedBox(width: 8),
+                HeroTrustBadge(
+                  icon: Icons.update_rounded,
+                  label: 'Horários do dia atualizados',
+                  isLight: false,
+                ),
+                SizedBox(width: 8),
+                HeroTrustBadge(
+                  icon: Icons.payments_outlined,
+                  label: 'Tarifas oficiais de Alagoas',
+                  isLight: false,
+                ),
+              ],
             ),
           ),
-          const RepaintBoundary(child: PwaInstallBanner()),
+          const PwaInstallBanner(),
           const SizedBox(height: 24),
-          const RepaintBoundary(child: _RotasPopularesSection()),
+          const _RotasPopularesSection(),
           const SizedBox(height: 24),
-          const RepaintBoundary(child: WhyPassaiSection(isDesktop: false)),
+          const WhyPassaiSection(isDesktop: false),
         ],
       ),
     );

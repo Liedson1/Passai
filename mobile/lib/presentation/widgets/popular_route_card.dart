@@ -50,8 +50,8 @@ class PopularRouteCard extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: AppColors.textPrimary.withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
               ),
             ],
           ),

@@ -2,7 +2,7 @@
 // Garante conformidade com critérios de instalabilidade PWA do Chromium (Chrome/Edge/Android/iOS)
 // e desempenho instantâneo com estratégia Cache-First para assets estáticos locais do Flutter.
 
-const CACHE_NAME = 'passai-pwa-v7';
+const CACHE_NAME = 'passai-pwa-v8';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
