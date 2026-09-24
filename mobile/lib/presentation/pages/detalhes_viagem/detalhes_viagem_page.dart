@@ -183,8 +183,31 @@ class _IdentificacaoCard extends StatelessWidget {
 
   final DetalhesViagem detalhes;
 
+  String _getBadgeText() {
+    final raw = detalhes.codigo.trim();
+    // Se o código for longo ou repetir o trajeto (ex: "Arapiraca x Maceió (via LITORAL)"),
+    // prioriza o tipo da linha ("Linha Intermunicipal") para evitar redundância e quebras
+    final isRouteOrLong = raw.toLowerCase().contains(' x ') ||
+        raw.toLowerCase().contains(' - ') ||
+        raw.length > 22;
+
+    if (isRouteOrLong) {
+      return detalhes.tipoLinha ?? 'Linha Intermunicipal';
+    }
+
+    if (raw.toLowerCase().startsWith('linha') ||
+        raw.toLowerCase().startsWith('código') ||
+        raw.toLowerCase().startsWith('codigo')) {
+      return raw;
+    }
+
+    return 'Linha $raw';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final badgeText = _getBadgeText();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -202,39 +225,44 @@ class _IdentificacaoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Linha superior: badge do código + preço em destaque
+          // Linha superior: badge do tipo/código + preço em destaque
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Badge do código da linha
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryLight,
-                  borderRadius: BorderRadius.circular(AppRadii.pill),
-                  border: Border.all(
-                    color: AppColors.secondary.withValues(alpha: 0.3),
+              // Badge flexível (nunca transborda nem empurra o preço para fora)
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
                   ),
-                ),
-                child: Text(
-                  'Código: ${detalhes.codigo}',
-                  style: AppTextStyles.bodySemibold(
-                    fontSize: 12,
-                    color: AppColors.secondary,
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryLight,
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                    border: Border.all(
+                      color: AppColors.secondary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Text(
+                    badgeText,
+                    style: AppTextStyles.bodySemibold(
+                      fontSize: 12,
+                      color: AppColors.secondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
 
-              const Spacer(),
-
-              // Preço em destaque
-              Text(
-                detalhes.preco,
-                style: AppTextStyles.headingMD(color: AppColors.primary),
-              ),
+              if (detalhes.preco.isNotEmpty) ...[
+                const SizedBox(width: 12),
+                // Preço em destaque sempre contido no card
+                Text(
+                  detalhes.preco,
+                  style: AppTextStyles.headingMD(color: AppColors.primary),
+                ),
+              ],
             ],
           ),
 
@@ -250,7 +278,7 @@ class _IdentificacaoCard extends StatelessWidget {
           ),
 
           // Via (quando existir)
-          if (detalhes.via != null) ...[
+          if (detalhes.via != null && detalhes.via!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               detalhes.via!,
