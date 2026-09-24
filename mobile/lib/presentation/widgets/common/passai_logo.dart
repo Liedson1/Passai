@@ -107,6 +107,7 @@ class PassaiLogo extends StatelessWidget {
             'PASSAÍ',
             style: TextStyle(
               fontFamily: 'Jua',
+              fontFamilyFallback: const ['Outfit', 'Manrope'],
               fontSize: h * 0.75,
               letterSpacing: 1.0,
               color: effectiveColor,
@@ -137,6 +138,7 @@ class PassaiLogo extends StatelessWidget {
               'PASSAÍ',
               style: TextStyle(
                 fontFamily: 'Jua',
+                fontFamilyFallback: const ['Outfit', 'Manrope'],
                 fontSize: h * 0.54,
                 letterSpacing: 1.0,
                 color: Colors.white,
@@ -160,6 +162,7 @@ class PassaiLogo extends StatelessWidget {
         'PASSAÍ',
         style: TextStyle(
           fontFamily: 'Jua',
+          fontFamilyFallback: const ['Outfit', 'Manrope'],
           fontSize: h * 0.88,
           letterSpacing: 1.0,
           color: effectiveColor,

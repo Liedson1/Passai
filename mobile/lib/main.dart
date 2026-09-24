@@ -1,10 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/network/supabase_client.dart';
@@ -26,19 +25,16 @@ import 'presentation/widgets/responsive_shell.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Desativa download HTTP externo de fontes em runtime: todas são empacotadas localmente (zero FOUT)
-  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Configura rotas limpas na web (sem o '#' na URL)
   configureAppUrlStrategy();
 
-  // Inicialização assíncrona paralela para arranque rápido antes do primeiro frame
+  // Inicialização assíncrona para arranque rápido antes do primeiro frame
   await Future.wait([
     initializeDateFormatting('pt_BR', null),
-    dotenv.load(fileName: '.env').catchError((_) {}),
   ]);
 
-  // Inicializa o Supabase com as credenciais do .env ou --dart-define
+  // Inicializa o Supabase com as credenciais compiladas
   await initSupabase();
 
   // Status bar transparente para o hero banner ter fundo vermelho completo

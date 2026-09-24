@@ -1,0 +1,24 @@
+# Ignorar arquivos do ambiente Dart / Flutter
+.dart_tool/
+.flutter-plugins-dependencies
+
+# Ignorar código-fonte e testes (deploy é estático via build/web)
+lib/
+test/
+android/
+ios/
+linux/
+macos/
+windows/
+
+# Ignorar artefatos pesados de build nativo
+build/app/
+build/jni/
+build/jni_flutter/
+build/shared_preferences_android/
+build/url_launcher_android/
+build/test_cache/
+build/reports/
+build/*.dill
+build/unit_test_assets/
+build/flutter_assets/
