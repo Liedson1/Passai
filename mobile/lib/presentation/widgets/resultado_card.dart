@@ -28,13 +28,6 @@ class ResultadoCard extends StatelessWidget {
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppRadii.card),
             border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.textPrimary.withValues(alpha: 0.04),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

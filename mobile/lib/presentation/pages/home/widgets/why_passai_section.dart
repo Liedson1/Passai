@@ -413,13 +413,6 @@ class _BeneficioCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 2,
-            offset: const Offset(0, 1),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

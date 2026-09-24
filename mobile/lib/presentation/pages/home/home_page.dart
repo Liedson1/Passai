@@ -47,7 +47,7 @@ class HomePage extends ConsumerWidget {
             } catch (_) {}
           },
           child: CustomScrollView(
-            physics: const BouncingScrollPhysics(
+            physics: const ClampingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
             slivers: [
