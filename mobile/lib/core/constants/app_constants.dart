@@ -32,8 +32,6 @@ class AppRoutes {
   static const String horarios = '/horarios';
   static const String resultados = '/resultados';
   static const String detalhesViagem = '/detalhes-viagem';
-
-  // Rotas de autenticação — reservadas para uso futuro (não expostas no router)
-  // static const String signIn = '/sign-in';
-  // static const String signUp = '/sign-up';
+  static const String signIn = '/sign-in';
+  static const String signUp = '/sign-up';
 }

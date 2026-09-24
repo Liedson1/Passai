@@ -10,7 +10,6 @@ import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/providers/resultados_provider.dart';
-import 'package:passai/core/utils/filtro_periodo_utils.dart';
 import 'package:passai/presentation/widgets/date_selector.dart';
 import 'package:passai/presentation/widgets/period_filter.dart';
 import 'package:passai/presentation/widgets/responsive_shell.dart';
