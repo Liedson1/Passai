@@ -140,9 +140,9 @@ class PopularRouteCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      icon: const Icon(Icons.map_outlined, size: 15),
+                      icon: const Icon(Icons.alt_route_rounded, size: 15),
                       label: const Text(
-                        'Ver no Mapa',
+                        'Ver Itinerário',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,

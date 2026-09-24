@@ -33,10 +33,10 @@ void main() {
       expect(find.text('Maceió (via Litoral)'), findsOneWidget);
       expect(find.text('R\$ 36,00'), findsOneWidget);
       expect(find.text('Dois maiores polos do estado'), findsOneWidget);
-      expect(find.text('Ver no Mapa'), findsOneWidget);
+      expect(find.text('Ver Itinerário'), findsOneWidget);
       expect(find.text('Ver Horários'), findsOneWidget);
 
-      await tester.tap(find.text('Ver no Mapa'));
+      await tester.tap(find.text('Ver Itinerário'));
       await tester.pump();
 
       expect(clicouDetalhes, isTrue);

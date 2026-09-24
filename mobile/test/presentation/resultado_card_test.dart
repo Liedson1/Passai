@@ -87,7 +87,7 @@ void main() {
       expect(find.text('4 paradas'), findsOneWidget);
     });
 
-    testWidgets('Deve exibir botão Ver Rota no Mapa e chamar callback ao tocar',
+    testWidgets('Deve exibir botão Ver Itinerário e chamar callback ao tocar',
         (tester) async {
       bool clicouDetalhes = false;
       const horarioMock = Horario(
@@ -111,8 +111,8 @@ void main() {
         ),
       );
 
-      expect(find.text('Ver Rota no Mapa'), findsOneWidget);
-      await tester.tap(find.text('Ver Rota no Mapa'));
+      expect(find.text('Ver Itinerário'), findsOneWidget);
+      await tester.tap(find.text('Ver Itinerário'));
       await tester.pump();
 
       expect(clicouDetalhes, isTrue);

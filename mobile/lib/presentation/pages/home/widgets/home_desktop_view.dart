@@ -733,9 +733,9 @@ class _DesktopRouteCardState extends State<_DesktopRouteCard> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    icon: const Icon(Icons.map_outlined, size: 15),
+                    icon: const Icon(Icons.alt_route_rounded, size: 15),
                     label: const Text(
-                      'Ver Rota no Mapa',
+                      'Ver Itinerário',
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                   ),
