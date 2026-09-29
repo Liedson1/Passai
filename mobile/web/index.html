@@ -37,7 +37,7 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <!-- Preload Crítico para Inicialização Rápida do Motor Flutter -->
-  <link rel="preload" href="flutter_bootstrap.js?v=1.0.20260929111022" as="script">
+  <link rel="preload" href="flutter_bootstrap.js?v=1.0.20260929112527" as="script">
 
   <!-- Supabase Edge DNS Prefetch (Resolve DNS em paralelo sem prender socket ocioso) -->
   <link rel="dns-prefetch" href="https://iwwduklpqbbyjhtovgjq.supabase.co">
@@ -189,7 +189,7 @@
     // Fallback de segurança para garantir que nunca trave na splash
     setTimeout(function() {
       window.removeSplashScreen();
-    }, 6000);
+    }, 3500);
 
     // ============================================================
     // Passaí PWA Controller & Native Install Interop
@@ -258,43 +258,34 @@
       window.passaiPwa._notifyState();
     });
 
-    // Registra o Service Worker oficial do Passaí PWA com verificação automática de novas versões
+    // Registra o Service Worker oficial do Passaí PWA com ciclo de vida seguro
     if ('serviceWorker' in navigator) {
-      var refreshing = false;
+      // Guarda se a página já estava sendo controlada por um service worker anterior
+      var hadPreviousController = Boolean(navigator.serviceWorker.controller);
+      var isReloading = false;
+
       navigator.serviceWorker.addEventListener('controllerchange', function() {
-        if (!refreshing) {
-          refreshing = true;
-          console.log('[Passaí PWA] Nova versão ativada. Recarregando aplicativo...');
+        // Só recarrega se já havia um controlador anterior (atualização real de versão)
+        // e se o aplicativo já terminou de inicializar (evita interromper a splash screen)
+        if (hadPreviousController && !isReloading && splashRemoved) {
+          isReloading = true;
+          console.log('[Passaí PWA] Nova versão ativa. Atualizando página...');
           window.location.reload();
         }
       });
 
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js?v=1.0.20260929111022
+        navigator.serviceWorker.register("sw.js?v=1.0.20260929112527", { scope: "./" })
           .then(function(reg) {
             console.log('[Passaí PWA] Service Worker registrado:', reg.scope);
 
-            // Escuta se uma nova versão foi encontrada e instalada
-            reg.addEventListener('updatefound', function() {
-              var newWorker = reg.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', function() {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('[Passaí PWA] Nova versão instalada. Forçando ativação imediata...');
-                    newWorker.postMessage({ action: 'skipWaiting' });
-                  }
-                });
-              }
-            });
+            // Aguarda 5 segundos após a carga para verificar atualizações em background
+            // Isso garante 100% de CPU e rede dedicados ao motor Flutter
+            setTimeout(function() {
+              reg.update();
+            }, 5000);
 
-            // Verifica se já existe um worker esperando para ser ativado
-            if (reg.waiting) {
-              reg.waiting.postMessage({ action: 'skipWaiting' });
-            }
-
-            // Checagem proativa imediata e periódica (ao reabrir aba ou app)
-            reg.update();
-
+            // Ao retornar para a aba, verifica suavemente se há nova versão
             document.addEventListener('visibilitychange', function() {
               if (document.visibilityState === 'visible') {
                 reg.update();
@@ -302,11 +293,11 @@
             });
           })
           .catch(function(err) {
-            console.warn('[Passaí PWA] Falha ao registrar Service Worker:', err);
+            console.warn('[Passaí PWA] Falha no registro do Service Worker:', err);
           });
       });
     }
   </script>
-  <script src="flutter_bootstrap.js?v=1.0.20260929111022" async></script>
+  <script src="flutter_bootstrap.js?v=1.0.20260929112527" async></script>
 </body>
 </html>

@@ -30,15 +30,12 @@ echo "=== Injetando ID único da versão para Cache-Busting automático ==="
 BUILD_ID="1.0.$(date +%Y%m%d%H%M%S)"
 echo "Build Version ID gerado: $BUILD_ID"
 
-# Atualiza index.html com o versionamento da build
-sed -i -E "s/sw\.js\?v=[^\"]*/sw.js?v=$BUILD_ID/g" web/index.html
-sed -i -E "s/flutter_bootstrap\.js\?v=[^\"]*/flutter_bootstrap.js?v=$BUILD_ID/g" web/index.html
+# Atualiza index.html com o versionamento da build de forma estrita e segura
+sed -i -E "s/sw\.js\?v=[0-9A-Za-z._-]+/sw.js?v=$BUILD_ID/g" web/index.html
+sed -i -E "s/flutter_bootstrap\.js\?v=[0-9A-Za-z._-]+/flutter_bootstrap.js?v=$BUILD_ID/g" web/index.html
 
 # Atualiza sw.js com o CACHE_NAME único da build
 sed -i -E "s/const CACHE_NAME = ['\"][^'\"]*['\"];/const CACHE_NAME = 'passai-pwa-$BUILD_ID';/g" web/sw.js
-
-# Atualiza flutter_bootstrap.js para cache-busting do main.dart.js
-sed -i -E "s/mainJsPath \+ '\?v=[^']*'/mainJsPath + '?v=$BUILD_ID'/g" web/flutter_bootstrap.js
 
 # Gera version.json
 echo "{\"version\": \"$BUILD_ID\", \"builtAt\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > web/version.json
