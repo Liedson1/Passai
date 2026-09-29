@@ -74,32 +74,44 @@ class RotasRemoteDatasource {
     }
   }
 
-  /// Busca cidades pelo nome (autocomplete).
-  /// Se [termo] for fornecido, filtra via ILIKE usando o índice trigram.
-  /// Se omitido, retorna todas as cidades ordenadas por nome.
+  /// Busca cidades que possuem rotas ativas associadas (origem ou destino).
+  /// Garante que apenas cidades com vans operacionais apareçam na busca (RN02),
+  /// eliminando cidades não associadas ou paradas intermediárias sem rota definida.
   Future<List<String>> fetchCidades({String? termo}) async {
     try {
-      var query = supabase.from('cidades').select('nome');
-
-      if (termo != null && termo.trim().isNotEmpty) {
-        // Sanitiza caracteres especiais de LIKE (% e _) para prevenir wildcards inesperados
-        final termoLimpo = termo.trim().replaceAll('%', '').replaceAll('_', '');
-        if (termoLimpo.isNotEmpty) {
-          query = query.ilike('nome', '%$termoLimpo%');
-        }
+      final rotas = await fetchTodasAsRotas();
+      final cidadesSet = <String>{};
+      for (final r in rotas) {
+        final origem = r.origem.trim();
+        final destino = r.destino.trim();
+        if (origem.isNotEmpty) cidadesSet.add(origem);
+        if (destino.isNotEmpty) cidadesSet.add(destino);
       }
 
-      final response =
-          await query.order('nome', ascending: true).timeout(_timeout);
+      var cidades = cidadesSet.toList()..sort((a, b) => a.compareTo(b));
 
-      final cidades = (response as List)
-          .map((json) => (json as Map<String, dynamic>)['nome'] as String)
-          .toList();
+      if (termo != null && termo.trim().isNotEmpty) {
+        final termoNorm = _normalizar(termo.trim());
+        cidades = cidades
+            .where((c) => _normalizar(c).contains(termoNorm))
+            .toList();
+      }
 
       return cidades;
     } catch (e) {
       throw _handleError(e);
     }
+  }
+
+  static String _normalizar(String str) {
+    return str
+        .toLowerCase()
+        .replaceAll(RegExp(r'[àáâãäå]'), 'a')
+        .replaceAll(RegExp(r'[èéêë]'), 'e')
+        .replaceAll(RegExp(r'[ìíîï]'), 'i')
+        .replaceAll(RegExp(r'[òóôõö]'), 'o')
+        .replaceAll(RegExp(r'[ùúûü]'), 'u')
+        .replaceAll(RegExp(r'[ç]'), 'c');
   }
 
   /// Busca horários de uma rota e sentido, incluindo alteração ativa do dia.

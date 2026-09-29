@@ -1,7 +1,7 @@
 // Passaí — PWA Service Worker Oficial de Alta Performance
 // Garante atualização instantânea a cada deploy, conformidade PWA e cache offline resiliente.
 
-const CACHE_NAME = 'passai-pwa-1.0.20260929113845';
+const CACHE_NAME = 'passai-pwa-1.0.20260929115458';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
