@@ -537,6 +537,7 @@ class _RouteSummaryCard extends StatelessWidget {
                   label: 'Chegada Prevista',
                   valor: detalhes.chegadaPrevista ?? '--:--',
                   destaque: true,
+                  corDestaque: AppColors.secondary,
                 ),
               ),
             ],
@@ -574,15 +575,18 @@ class _MetricaItem extends StatelessWidget {
     required this.label,
     required this.valor,
     this.destaque = false,
+    this.corDestaque,
   });
 
   final IconData icon;
   final String label;
   final String valor;
   final bool destaque;
+  final Color? corDestaque;
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = corDestaque ?? AppColors.primary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
@@ -595,7 +599,7 @@ class _MetricaItem extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: destaque ? AppColors.primary : AppColors.textSecondary,
+            color: destaque ? activeColor : AppColors.textSecondary,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -613,7 +617,7 @@ class _MetricaItem extends StatelessWidget {
                   valor,
                   style: AppTextStyles.bodyBold(
                     fontSize: 13,
-                    color: destaque ? AppColors.primary : AppColors.textPrimary,
+                    color: destaque ? activeColor : AppColors.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -904,8 +908,8 @@ class _SecaoItinerario extends StatelessWidget {
             Column(
               children: List.generate(itinerario.length, (index) {
                 final parada = itinerario[index];
-                final isFirst = index == 0;
-                final isLast = index == itinerario.length - 1;
+                final isFirst = index == 0 || parada.tipo == 'origem';
+                final isLast = index == itinerario.length - 1 || parada.tipo == 'destino';
 
                 return _TimelineNode(
                   parada: parada,
@@ -1006,7 +1010,7 @@ class _TimelineNode extends StatelessWidget {
 
   Color get _nodeColor {
     if (isFirst) return AppColors.primary;
-    if (isLast) return AppColors.primaryDark;
+    if (isLast) return AppColors.secondary;
     return AppColors.textSecondary;
   }
 
@@ -1022,7 +1026,7 @@ class _TimelineNode extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 12),
-                // Nó estilizado
+                // Nó estilizado (ícone circular com ponto interno)
                 Container(
                   width: 18,
                   height: 18,
@@ -1098,7 +1102,7 @@ class _TimelineNode extends StatelessWidget {
                             border: Border.all(
                               color: isFirst
                                   ? AppColors.primary.withValues(alpha: 0.3)
-                                  : (isLast ? AppColors.primaryDark.withValues(alpha: 0.3) : AppColors.border),
+                                  : (isLast ? AppColors.secondary.withValues(alpha: 0.3) : AppColors.border),
                             ),
                           ),
                           child: Text(
@@ -1107,7 +1111,7 @@ class _TimelineNode extends StatelessWidget {
                               fontSize: 12,
                               color: isFirst
                                   ? AppColors.primary
-                                  : (isLast ? AppColors.primaryDark : AppColors.textSecondary),
+                                  : (isLast ? AppColors.secondary : AppColors.textSecondary),
                             ),
                           ),
                         ),
@@ -1134,21 +1138,45 @@ class _TimelineNode extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         ...parada.tags.map(
-                          (t) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Text(
-                              t,
-                              style: AppTextStyles.bodyMedium(
-                                fontSize: 10,
-                                color: AppColors.textSecondary,
+                          (t) {
+                            final lower = t.toLowerCase();
+                            final isChegadaTag = isLast || lower.contains('chegada') || lower.contains('desembarque');
+                            final isPartidaTag = isFirst || lower.contains('partida') || lower.contains('embarque');
+
+                            final Color tagBg;
+                            final Color tagBorder;
+                            final Color tagTextColor;
+
+                            if (isChegadaTag) {
+                              tagBg = AppColors.secondaryLight;
+                              tagBorder = AppColors.secondary.withValues(alpha: 0.25);
+                              tagTextColor = AppColors.secondary;
+                            } else if (isPartidaTag) {
+                              tagBg = AppColors.primaryLight;
+                              tagBorder = AppColors.primary.withValues(alpha: 0.25);
+                              tagTextColor = AppColors.primary;
+                            } else {
+                              tagBg = AppColors.surface;
+                              tagBorder = AppColors.border;
+                              tagTextColor = AppColors.textSecondary;
+                            }
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: tagBg,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: tagBorder),
                               ),
-                            ),
-                          ),
+                              child: Text(
+                                t,
+                                style: AppTextStyles.bodyMedium(
+                                  fontSize: 10,
+                                  color: tagTextColor,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         if (parada.observacao != null)
                           Container(
@@ -1161,7 +1189,7 @@ class _TimelineNode extends StatelessWidget {
                               parada.observacao!,
                               style: AppTextStyles.bodyMedium(
                                 fontSize: 10,
-                                color: AppColors.primary,
+                                color: isLast ? AppColors.secondary : AppColors.primary,
                               ),
                             ),
                           ),
@@ -1194,15 +1222,18 @@ class _RecomendacaoCard extends StatelessWidget {
     final avisoMensagem = detalhes.aviso ??
         'Chegue com 10 a 15 minutos de antecedência no ponto de partida em $origemNome para garantir seu lugar no veículo. O embarque é realizado por ordem de chegada.';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
+    return Material(
+      color: AppColors.primaryLight,
+      borderRadius: BorderRadius.circular(AppRadii.card),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadii.card),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
           collapsedIconColor: AppColors.primary,
           iconColor: AppColors.primary,
           tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
@@ -1240,8 +1271,9 @@ class _RecomendacaoCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ---------------------------------------------------------------------------
