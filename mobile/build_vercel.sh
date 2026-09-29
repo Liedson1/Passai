@@ -6,6 +6,9 @@ echo "=== Configurando o ambiente para o Vercel ==="
 # Define a pasta temporária para instalar o Flutter
 FLUTTER_DIR=".flutter_sdk"
 
+# Evita erros de diretório suspeito do git no ambiente CI da Vercel
+git config --global --add safe.directory "*" 2>/dev/null || true
+
 if [ ! -d "$FLUTTER_DIR" ]; then
   echo "Baixando o Flutter (canal stable)..."
   git clone https://github.com/flutter/flutter.git -b stable --depth 1 $FLUTTER_DIR
