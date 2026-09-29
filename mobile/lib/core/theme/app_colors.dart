@@ -46,5 +46,35 @@ class AppColors {
   static const Color titleGold = Color(0xFFFFD166);
   static const Color footerBackground = Color(0xFF231B18);
   static const Color footerText = Color(0xFFA09690);
+
+  // Transit Design System Tokens (Passaí Transit System)
+  static const Color transitPrimary = Color(0xFF0066FF);
+  static const Color transitPrimaryHover = Color(0xFF0052CC);
+  static const Color transitPrimaryContainer = Color(0xFFDBEAFE);
+  static const Color transitOnPrimaryContainer = Color(0xFF1E40AF);
+  static const Color transitSurface = Color(0xFFF8F9FF);
+  static const Color transitSurfaceLow = Color(0xFFEFF4FF);
+  static const Color transitSurfaceContainer = Color(0xFFE5EDFF);
+  static const Color transitOnSurface = Color(0xFF0F172A);
+  static const Color transitOnSurfaceVariant = Color(0xFF475569);
+  static const Color transitOutline = Color(0xFFCBD5E1);
+  static const Color transitOutlineVariant = Color(0xFFE2E8F0);
+
+  // Status Tokens
+  static const Color statusSuccessBg = Color(0xFFDCFCE7);
+  static const Color statusSuccessText = Color(0xFF166534);
+  static const Color statusSuccessDot = Color(0xFF22C55E);
+  static const Color statusWarningBg = Color(0xFFFEF9C3);
+  static const Color statusWarningText = Color(0xFF854D0E);
+
+  // Cooperativa Badge
+  static const Color badgeCooperativaBg = Color(0xFFA7F3D0);
+  static const Color badgeCooperativaText = Color(0xFF065F46);
+
+  // Timeline Tokens
+  static const Color timelineOrigin = Color(0xFF0066FF);
+  static const Color timelineIntermediate = Color(0xFF3B82F6);
+  static const Color timelineDestination = Color(0xFFDC2626);
+  static const Color timelineTrackLine = Color(0xFFCBD5E1);
 }
 

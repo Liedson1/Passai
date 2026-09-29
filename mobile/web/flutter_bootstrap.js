@@ -5,7 +5,7 @@
 if (window._flutter && window._flutter.buildConfig && window._flutter.buildConfig.builds) {
   window._flutter.buildConfig.builds.forEach(function(build) {
     if (build.mainJsPath) {
-      build.mainJsPath = build.mainJsPath + '?v=1.0.16';
+      build.mainJsPath = build.mainJsPath + '?v=1.0.18';
     }
   });
 }

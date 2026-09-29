@@ -962,13 +962,26 @@ class _RotasPopularesSection extends ConsumerWidget {
                       ),
                     ];
 
+                    final duracaoStr = rota.distanciaKm != null
+                        ? '${(rota.distanciaKm! * 1.15).round()} min'
+                        : '1h 45m';
+                    final distanciaStr = rota.distanciaKm != null
+                        ? '${rota.distanciaKm} km'
+                        : '85 km';
+
                     final detalhes = DetalhesViagem(
                       codigo: rota.linha,
                       preco: precoStr,
                       rota: '${config.origem} x ${config.destino}',
+                      origem: config.origem,
+                      destino: config.destino,
                       itinerario: itinerarioFallback,
                       horaSaida: config.horarioSaida,
-                      tipoLinha: 'Linha Intermunicipal',
+                      duracao: duracaoStr,
+                      distancia: distanciaStr,
+                      tipoLinha: 'Transporte Intermunicipal',
+                      diasOperacao: rota.diasOperacao,
+                      seccionamentos: rota.seccionamentos,
                       via: config.via != null
                           ? (config.via!.toLowerCase().startsWith('via')
                               ? config.via!

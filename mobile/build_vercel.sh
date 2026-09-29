@@ -24,7 +24,14 @@ echo "=== Instalando dependências ==="
 flutter pub get
 
 echo "=== Compilando o app Flutter para Web ==="
-# A flag --web-renderer canvaskit geralmente tem melhor performance, mas html carrega mais rápido
-flutter build web --release
+DART_DEFINES=""
+if [ -n "$SUPABASE_URL" ]; then
+  DART_DEFINES="$DART_DEFINES --dart-define=SUPABASE_URL=$SUPABASE_URL"
+fi
+if [ -n "$SUPABASE_ANON_KEY" ]; then
+  DART_DEFINES="$DART_DEFINES --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+fi
+
+flutter build web --release $DART_DEFINES
 
 echo "=== Build concluído com sucesso ==="

@@ -369,14 +369,35 @@ class _ResultadosList extends StatelessWidget {
                       ),
                     ];
 
+                    final duracaoStr = horario.duracao ??
+                        (rota.distanciaKm != null
+                            ? '${(rota.distanciaKm! * 1.15).round()} min'
+                            : '1h 45m');
+
+                    final distanciaStr = rota.distanciaKm != null
+                        ? '${rota.distanciaKm} km'
+                        : '85 km';
+
                     final detalhes = DetalhesViagem(
                       codigo: horario.nomeRota ?? rota.linha,
                       preco: precoFormatado,
                       rota: '$origem x $destino',
+                      origem: origem,
+                      destino: destino,
                       itinerario: itinerarioFallback,
                       horaSaida: horario.hora,
-                      tipoLinha: 'Linha Intermunicipal',
+                      duracao: duracaoStr,
+                      distancia: distanciaStr,
+                      tipoLinha: 'Transporte Intermunicipal',
+                      veiculoNumero: horario.alteracao?.vanSubstituta ??
+                          horario.alteracao?.vanOriginal,
+                      vanOriginal: horario.alteracao?.vanOriginal,
+                      vanSubstituta: horario.alteracao?.vanSubstituta,
                       via: rota.via,
+                      diasOperacao: rota.diasOperacao,
+                      seccionamentos: rota.seccionamentos,
+                      alterado: horario.alterado,
+                      alteracaoMotivo: horario.alteracao?.motivo,
                     );
 
                     context.push(

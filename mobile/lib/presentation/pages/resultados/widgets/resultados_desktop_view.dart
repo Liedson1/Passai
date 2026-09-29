@@ -627,13 +627,26 @@ class _DesktopViagemCard extends StatelessWidget {
                     ),
                   ];
 
+                  final duracaoStr = horario.duracao ?? '1h 45m';
+                  const distanciaStr = '85 km';
+
                   final detalhes = DetalhesViagem(
                     codigo: horario.nomeRota ?? '$origem x $destino',
                     preco: precoFormatado,
                     rota: '$origem x $destino',
+                    origem: origem,
+                    destino: destino,
                     itinerario: itinerarioFallback,
                     horaSaida: horario.hora,
-                    tipoLinha: 'Linha Intermunicipal',
+                    duracao: duracaoStr,
+                    distancia: distanciaStr,
+                    tipoLinha: 'Transporte Intermunicipal',
+                    veiculoNumero: horario.alteracao?.vanSubstituta ??
+                        horario.alteracao?.vanOriginal,
+                    vanOriginal: horario.alteracao?.vanOriginal,
+                    vanSubstituta: horario.alteracao?.vanSubstituta,
+                    alterado: horario.alterado,
+                    alteracaoMotivo: horario.alteracao?.motivo,
                   );
 
                   context.push(

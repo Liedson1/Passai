@@ -64,7 +64,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
         }
       ]
     },
@@ -105,7 +105,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(?:wasm|mjs|otf|ttf|woff|woff2|svg|png|jpg|jpeg|ico))",
+      "source": "/(.*\\.(?:wasm|mjs|otf|ttf|woff|woff2|svg|png|jpg|jpeg|webp|ico))",
       "headers": [
         {
           "key": "Cache-Control",

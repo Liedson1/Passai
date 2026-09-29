@@ -542,13 +542,26 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                                 ),
                               ];
 
+                              final duracaoStr = rotaFinal.distanciaKm != null
+                                  ? '${(rotaFinal.distanciaKm! * 1.15).round()} min'
+                                  : '1h 45m';
+                              final distanciaStr = rotaFinal.distanciaKm != null
+                                  ? '${rotaFinal.distanciaKm} km'
+                                  : '85 km';
+
                               final detalhes = DetalhesViagem(
                                 codigo: rotaFinal.linha,
                                 preco: precoFormatado,
                                 rota: '${destaque.origem} x ${destaque.destino}',
+                                origem: destaque.origem,
+                                destino: destaque.destino,
                                 itinerario: itinerarioFallback,
                                 horaSaida: destaque.horarioSaida,
-                                tipoLinha: 'Linha Intermunicipal',
+                                duracao: duracaoStr,
+                                distancia: distanciaStr,
+                                tipoLinha: 'Transporte Intermunicipal',
+                                diasOperacao: rotaFinal.diasOperacao,
+                                seccionamentos: rotaFinal.seccionamentos,
                                 via: destaque.via != null
                                     ? (destaque.via!.toLowerCase().startsWith('via')
                                         ? destaque.via!
