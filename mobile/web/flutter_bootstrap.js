@@ -5,8 +5,12 @@ _flutter.loader.load({
   onEntrypointLoaded: async function(engineInitializer) {
     const appRunner = await engineInitializer.initializeEngine();
     await appRunner.runApp();
-    if (window.removeSplashScreen) {
-      window.removeSplashScreen();
-    }
+    window.requestAnimationFrame(function() {
+      window.requestAnimationFrame(function() {
+        if (window.removeSplashScreen) {
+          window.removeSplashScreen();
+        }
+      });
+    });
   }
 });

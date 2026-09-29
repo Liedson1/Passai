@@ -37,7 +37,9 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <!-- Preload Crítico para Inicialização Rápida do Motor Flutter -->
-  <link rel="preload" href="flutter_bootstrap.js?v=1.0.20260929112527" as="script">
+  <link rel="preload" href="flutter_bootstrap.js?v=1.0.20260929113845" as="script">
+  <link rel="preload" href="main.dart.js" as="script">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 
   <!-- Supabase Edge DNS Prefetch (Resolve DNS em paralelo sem prender socket ocioso) -->
   <link rel="dns-prefetch" href="https://iwwduklpqbbyjhtovgjq.supabase.co">
@@ -146,6 +148,14 @@
       0% { transform: translateX(-100%); }
       100% { transform: translateX(250%); }
     }
+    .splash-loader-status {
+      margin-top: 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #8F7D77;
+      min-height: 18px;
+      transition: opacity 0.3s ease;
+    }
   </style>
 </head>
 <body>
@@ -160,6 +170,7 @@
       <div class="splash-loader-bar">
         <div class="splash-loader-progress"></div>
       </div>
+      <div id="splash-status" class="splash-loader-status"></div>
     </div>
   </div>
 
@@ -186,10 +197,33 @@
       window.removeSplashScreen();
     });
 
-    // Fallback de segurança para garantir que nunca trave na splash
+    // Mensagens de progresso suaves para conexões lentas ou primeiro acesso
     setTimeout(function() {
-      window.removeSplashScreen();
-    }, 3500);
+      if (!splashRemoved) {
+        var statusEl = document.getElementById('splash-status');
+        if (statusEl) {
+          statusEl.textContent = 'Carregando linhas e horários...';
+        }
+      }
+    }, 2800);
+
+    setTimeout(function() {
+      if (!splashRemoved) {
+        var statusEl = document.getElementById('splash-status');
+        if (statusEl) {
+          statusEl.textContent = 'Iniciando o Passaí...';
+        }
+      }
+    }, 5500);
+
+    // Fallback de emergência (apenas para falhas catastróficas ou WebGL travado)
+    // 20 segundos garante que conexões móveis não vejam tela em branco prematuramente
+    setTimeout(function() {
+      if (!splashRemoved) {
+        console.warn('[Passaí] Fallback de segurança acionado.');
+        window.removeSplashScreen();
+      }
+    }, 20000);
 
     // ============================================================
     // Passaí PWA Controller & Native Install Interop
@@ -275,7 +309,7 @@
       });
 
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register("sw.js?v=1.0.20260929112527", { scope: "./" })
+        navigator.serviceWorker.register("sw.js?v=1.0.20260929113845", { scope: "./" })
           .then(function(reg) {
             console.log('[Passaí PWA] Service Worker registrado:', reg.scope);
 
@@ -298,6 +332,6 @@
       });
     }
   </script>
-  <script src="flutter_bootstrap.js?v=1.0.20260929112527" async></script>
+  <script src="flutter_bootstrap.js?v=1.0.20260929113845" async></script>
 </body>
 </html>

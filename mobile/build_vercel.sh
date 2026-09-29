@@ -49,6 +49,6 @@ if [ -n "$SUPABASE_ANON_KEY" ]; then
   DART_DEFINES="$DART_DEFINES --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
 fi
 
-flutter build web --release $DART_DEFINES
+flutter build web --release -O4 --no-source-maps --no-wasm-dry-run $DART_DEFINES
 
 echo "=== Build concluído com sucesso ==="
