@@ -95,10 +95,13 @@ class _MapaContainer extends StatelessWidget {
             ),
           ),
           children: [
-            // Tiles do OpenStreetMap — gratuito, sem API key, sem cookie
+            // Tiles do CartoDB Voyager — gratuito, sem API key e com CORS
+            // habilitado para Flutter Web (OSM bloqueia CORS no browser).
             TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+              subdomains: const ['a', 'b', 'c', 'd'],
               userAgentPackageName: 'app.passai.alagoas',
+              maxZoom: 19,
             ),
 
             // Polyline conectando as paradas
@@ -214,7 +217,7 @@ class _LegendaMapa extends StatelessWidget {
         const Icon(Icons.map_outlined, size: 13, color: AppColors.textSecondary),
         const SizedBox(width: 4),
         const Text(
-          'OpenStreetMap',
+          '© CartoDB | OpenStreetMap',
           style: TextStyle(
             fontFamily: 'Manrope',
             fontSize: 11,
