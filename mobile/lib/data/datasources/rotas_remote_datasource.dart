@@ -183,6 +183,8 @@ class RotasRemoteDatasource {
     required String sentido,
   }) async {
     try {
+      // Tenta buscar com coordenadas via FK cidade_id → cidades
+      // (requer migração 015 executada no banco)
       final response = await supabase
           .from('paradas_rota')
           .select('''
@@ -205,24 +207,20 @@ class RotasRemoteDatasource {
       return (response as List)
           .map((json) => ParadaRotaModel.fromJson(json as Map<String, dynamic>))
           .toList();
-    } catch (e) {
-      // Se o JOIN falhar (FK inexistente ou coluna ausente), faz fallback
-      // com a query original sem coordenadas — garantindo graceful degradation
-      try {
-        final response = await supabase
-            .from('paradas_rota')
-            .select('id, rota_id, sentido, ordem, cidade, descricao')
-            .eq('rota_id', rotaId)
-            .eq('sentido', sentido)
-            .order('ordem', ascending: true)
-            .timeout(_timeout);
+    } catch (_) {
+      // Fallback: query sem coordenadas (migração 015 ainda não executada
+      // ou FK ausente). O mapa não será exibido, mas a tela funciona normalmente.
+      final response = await supabase
+          .from('paradas_rota')
+          .select('id, rota_id, sentido, ordem, cidade, descricao')
+          .eq('rota_id', rotaId)
+          .eq('sentido', sentido)
+          .order('ordem', ascending: true)
+          .timeout(_timeout);
 
-        return (response as List)
-            .map((json) => ParadaRotaModel.fromJson(json as Map<String, dynamic>))
-            .toList();
-      } catch (fallbackError) {
-        throw _handleError(fallbackError);
-      }
+      return (response as List)
+          .map((json) => ParadaRotaModel.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
   }
 }
