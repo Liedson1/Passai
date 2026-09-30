@@ -8,6 +8,7 @@ import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/presentation/providers/paradas_provider.dart';
+import 'package:passai/presentation/widgets/itinerario_mapa_widget.dart';
 import 'package:passai/presentation/widgets/responsive_shell.dart';
 import 'package:passai/presentation/widgets/web/web_navbar.dart';
 import 'package:passai/presentation/widgets/web/web_footer.dart';
@@ -965,7 +966,19 @@ class _SecaoItinerario extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
+
+          // Mapa interativo — visível apenas quando há coordenadas cadastradas
+          // Fallback silencioso: SizedBox.shrink() quando dados insuficientes
+          if (!isLoading) ...[  
+            ItinerarioMapaWidget(
+              paradas: itinerario,
+              altura: MediaQuery.of(context).size.width > 800 ? 300 : 240,
+            ),
+            // Espaço entre mapa e timeline apenas quando o mapa for exibido
+            if (itinerario.any((p) => p.temCoordenadas))
+              const SizedBox(height: 16),
+          ],
+
           if (isLoading)
             const _TimelineSkeleton()
           else if (itinerario.isEmpty)

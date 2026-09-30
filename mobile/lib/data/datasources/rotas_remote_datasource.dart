@@ -173,27 +173,73 @@ class RotasRemoteDatasource {
     return todosHorarios.where((h) => h.toEntity().operaNoDia(data)).toList();
   }
 
-  /// Busca as paradas do itinerário de uma rota/sentido, ordenadas por [ordem].
-  /// Retorna lista vazia quando a rota não possui paradas cadastradas,
-  /// permitindo fallback gracioso na camada de apresentação.
+  /// Busca as paradas do itinerário de uma rota/sentido, ordenadas por [ordem],
+  /// enriquecidas com as coordenadas geográficas de cada cidade.
+  ///
+  /// Estratégia de duas queries (mais confiável que FK JOIN do Supabase):
+  ///   1. Busca paradas_rota com cidade_id.
+  ///   2. Busca coordenadas das cidades referenciadas (IN por IDs).
+  ///   3. Mescla em memória no Dart.
+  ///
+  /// Fallback gracioso: se coordenadas não estiverem disponíveis,
+  /// retorna paradas sem lat/lng — a tela exibe a timeline sem o mapa.
   Future<List<ParadaRotaModel>> fetchParadasRota({
     required int rotaId,
     required String sentido,
   }) async {
     try {
-      final response = await supabase
+      // 1. Busca paradas com cidade_id (sem JOIN — simples e confiável)
+      final paradasResponse = await supabase
           .from('paradas_rota')
-          .select('id, rota_id, sentido, ordem, cidade, descricao')
+          .select('id, rota_id, sentido, ordem, cidade, descricao, cidade_id')
           .eq('rota_id', rotaId)
           .eq('sentido', sentido)
           .order('ordem', ascending: true)
           .timeout(_timeout);
 
-      return (response as List)
-          .map((json) => ParadaRotaModel.fromJson(json as Map<String, dynamic>))
+      final paradasJson = (paradasResponse as List)
+          .map((e) => e as Map<String, dynamic>)
           .toList();
+
+      if (paradasJson.isEmpty) return const [];
+
+      // 2. Coleta IDs únicos das cidades para buscar coordenadas
+      final cidadeIds = paradasJson
+          .map((p) => p['cidade_id'] as int?)
+          .where((id) => id != null)
+          .cast<int>()
+          .toSet()
+          .toList();
+
+      // 3. Busca coordenadas das cidades em lote (query simples por ID)
+      final Map<int, Map<String, dynamic>> coordPorId = {};
+      if (cidadeIds.isNotEmpty) {
+        final cidadesResponse = await supabase
+            .from('cidades')
+            .select('id, latitude, longitude')
+            .inFilter('id', cidadeIds)
+            .timeout(_timeout);
+
+        for (final c in cidadesResponse as List) {
+          final cidade = c as Map<String, dynamic>;
+          final id = cidade['id'] as int?;
+          if (id != null) coordPorId[id] = cidade;
+        }
+      }
+
+      // 4. Mescla coordenadas nas paradas e converte para modelos
+      return paradasJson.map((json) {
+        final cidadeId = json['cidade_id'] as int?;
+        final coords = cidadeId != null ? coordPorId[cidadeId] : null;
+        return ParadaRotaModel.fromJson({
+          ...json,
+          if (coords != null) 'latitude': coords['latitude'],
+          if (coords != null) 'longitude': coords['longitude'],
+        });
+      }).toList();
     } catch (e) {
       throw _handleError(e);
     }
   }
 }
+
