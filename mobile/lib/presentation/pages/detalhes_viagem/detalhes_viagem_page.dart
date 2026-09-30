@@ -1412,33 +1412,6 @@ class _AcoesFooter extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 10),
-
-        // Botão terciário — Voltar
-        SizedBox(
-          width: double.infinity,
-          height: 46,
-          child: TextButton.icon(
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go(AppRoutes.home);
-              }
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.textPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.button),
-              ),
-            ),
-            icon: const Icon(Icons.arrow_back_rounded, size: 16),
-            label: Text(
-              'Voltar para Resultados',
-              style: AppTextStyles.bodySemibold(fontSize: 13, color: AppColors.textPrimary),
-            ),
-          ),
-        ),
       ],
     );
   }
