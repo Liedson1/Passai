@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
@@ -63,15 +64,14 @@ class _HorariosPageState extends ConsumerState<HorariosPage> {
         body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () async {
+          HapticFeedback.lightImpact();
           ref.invalidate(horariosProvider(params));
           try {
             await ref.read(horariosProvider(params).future);
           } catch (_) {}
         },
         child: CustomScrollView(
-          physics: const ClampingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             _AppBar(rota: widget.rota, sentido: sentido),
             SliverToBoxAdapter(
@@ -251,7 +251,11 @@ class _SentidoButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -289,8 +293,9 @@ class _HorariosList extends StatelessWidget {
     // Conta horários alterados para o banner informativo
     final numAlterados = horarios.where((h) => h.alterado).length;
 
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 32 + bottomPadding),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {

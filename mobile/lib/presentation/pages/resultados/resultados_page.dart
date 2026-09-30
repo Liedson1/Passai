@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
@@ -61,6 +62,7 @@ class _ResultadosPageState extends ConsumerState<ResultadosPage> {
   }
 
   void _inverterSentido() {
+    HapticFeedback.lightImpact();
     setState(() {
       _sentidoAtual =
           _sentidoAtual == Sentido.ida ? Sentido.volta : Sentido.ida;
@@ -107,15 +109,14 @@ class _ResultadosPageState extends ConsumerState<ResultadosPage> {
           body: RefreshIndicator(
           color: AppColors.primary,
           onRefresh: () async {
+            HapticFeedback.lightImpact();
             ref.invalidate(resultadosHorariosProvider(params));
             try {
               await ref.read(resultadosHorariosProvider(params).future);
             } catch (_) {}
           },
           child: CustomScrollView(
-            physics: const ClampingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               // AppBar com info da rota
               _ResultadosAppBar(
@@ -257,7 +258,7 @@ class _ResultadosAppBar extends StatelessWidget {
                             onTap: onInverterSentido,
                             customBorder: const CircleBorder(),
                             child: const Padding(
-                              padding: EdgeInsets.all(6),
+                              padding: EdgeInsets.all(8),
                               child: Icon(
                                 Icons.swap_horiz_rounded,
                                 color: AppColors.titleGold,
@@ -361,8 +362,9 @@ class _ResultadosList extends StatelessWidget {
     // Conta horários alterados para o banner informativo
     final numAlterados = horarios.where((h) => h.alterado).length;
 
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 32 + bottomPadding),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {

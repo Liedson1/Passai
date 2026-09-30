@@ -42,11 +42,15 @@ void main() async {
   // Inicializa o Supabase com as credenciais compiladas
   await initSupabase();
 
-  // Status bar transparente para o hero banner ter fundo vermelho completo
+  // Status bar e navigation bar para padrão edge-to-edge nativo
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: AppColors.background,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
 
@@ -392,8 +396,9 @@ Widget _buildEmptyStateScaffold(
   );
 }
 
-/// Comportamento de rolagem customizado: física sem deformação de malha (Clamping)
-/// e suporte completo a toque, mouse e trackpad.
+/// Comportamento de rolagem adaptativo por plataforma:
+/// - iOS e macOS: BouncingScrollPhysics nativo com suporte a toque
+/// - Android, Web e Desktop: ClampingScrollPhysics consistente
 class PassaiScrollBehavior extends MaterialScrollBehavior {
   const PassaiScrollBehavior();
 
@@ -407,7 +412,15 @@ class PassaiScrollBehavior extends MaterialScrollBehavior {
 
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
-    return const ClampingScrollPhysics();
+    final platform = Theme.of(context).platform;
+    if (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS) {
+      return const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
+      );
+    }
+    return const ClampingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
+    );
   }
 }
 

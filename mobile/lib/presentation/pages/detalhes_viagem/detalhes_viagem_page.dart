@@ -189,14 +189,19 @@ class DetalhesViagemPage extends ConsumerWidget {
         child: Scaffold(
           backgroundColor: AppColors.background,
           body: CustomScrollView(
-            physics: const ClampingScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               // AppBar no padrão do site
               _DetalhesAppBar(detalhes: detalhes),
 
               // Conteúdo principal
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  20,
+                  20,
+                  40 + MediaQuery.of(context).padding.bottom,
+                ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate(contentItems),
                 ),
@@ -331,6 +336,7 @@ class _DetalhesAppBar extends StatelessWidget {
         icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textOnPrimary),
         tooltip: 'Voltar',
         onPressed: () {
+          HapticFeedback.lightImpact();
           if (context.canPop()) {
             context.pop();
           } else {
@@ -342,7 +348,10 @@ class _DetalhesAppBar extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.share_outlined, color: AppColors.textOnPrimary),
           tooltip: 'Compartilhar viagem',
-          onPressed: () => _compartilharViagem(context, detalhes),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            _compartilharViagem(context, detalhes);
+          },
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(

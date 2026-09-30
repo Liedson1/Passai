@@ -20,6 +20,8 @@ import 'package:passai/presentation/widgets/web/pwa_install_banner.dart';
 import 'widgets/home_desktop_view.dart';
 import 'widgets/why_passai_section.dart';
 
+import 'package:flutter/services.dart';
+
 /// Tela principal do Passaí — consulta de horários de vans
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -32,36 +34,42 @@ class HomePage extends ConsumerWidget {
       return const HomeDesktopView();
     }
 
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return ResponsiveShell(
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: () async {
-            ref.invalidate(cidadesProvider);
-            ref.invalidate(todasAsRotasProvider);
-            try {
-              await Future.wait([
-                ref.read(cidadesProvider.future),
-                ref.read(todasAsRotasProvider.future),
-              ]);
-            } catch (_) {}
-          },
-          child: CustomScrollView(
-            physics: const ClampingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            slivers: [
-              SliverToBoxAdapter(
-                child: _HeroBanner(),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.all(20),
-                sliver: SliverToBoxAdapter(
-                  child: _BodyContent(),
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+          child: RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              HapticFeedback.lightImpact();
+              ref.invalidate(cidadesProvider);
+              ref.invalidate(todasAsRotasProvider);
+              try {
+                await Future.wait([
+                  ref.read(cidadesProvider.future),
+                  ref.read(todasAsRotasProvider.future),
+                ]);
+              } catch (_) {}
+            },
+            child: CustomScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _HeroBanner(),
                 ),
-              ),
-            ],
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(20, 20, 20, 24 + bottomPadding),
+                  sliver: SliverToBoxAdapter(
+                    child: _BodyContent(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -302,24 +310,29 @@ class _SearchCardState extends ConsumerState<_SearchCard> {
                 MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () {
+                      HapticFeedback.lightImpact();
                       _clearError();
                       final o = ref.read(origemSelecionadaProvider);
                       final d = ref.read(destinoSelecionadoProvider);
                       ref.read(origemSelecionadaProvider.notifier).state = d;
                       ref.read(destinoSelecionadoProvider.notifier).state = o;
                     },
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.swap_vert,
-                        color: AppColors.textOnPrimary,
-                        size: 18,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.swap_vert,
+                          color: AppColors.textOnPrimary,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -355,7 +368,10 @@ class _SearchCardState extends ConsumerState<_SearchCard> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: canSearch
-                  ? () => _buscar(context, origem.trim(), destino.trim())
+                  ? () {
+                      HapticFeedback.mediumImpact();
+                      _buscar(context, origem.trim(), destino.trim());
+                    }
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -604,6 +620,7 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
         return matches;
       },
       onSelected: (cidade) {
+        HapticFeedback.selectionClick();
         _controller.text = cidade;
         widget.onSelecionada(cidade);
         _focusNode.unfocus();
@@ -689,12 +706,14 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
               // Ícone para limpar o campo
               if (controller.text.isNotEmpty)
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     controller.clear();
                     widget.onLimpa();
                   },
                   child: const Padding(
-                    padding: EdgeInsets.all(4.0),
+                    padding: EdgeInsets.all(6.0),
                     child: Icon(
                       Icons.close,
                       color: AppColors.textSecondary,
@@ -743,7 +762,10 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
                   itemBuilder: (context, index) {
                     final cidade = options.elementAt(index);
                     return InkWell(
-                      onTap: () => onSelected(cidade),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        onSelected(cidade);
+                      },
                       borderRadius: BorderRadius.circular(AppRadii.input),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
