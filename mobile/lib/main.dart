@@ -128,6 +128,7 @@ final _router = GoRouter(
         // Suporte a recarregamento F5 na Web
         final rotaIdStr = state.uri.queryParameters['rotaId'];
         final sentidoStr = state.uri.queryParameters['sentido'];
+        final hora = state.uri.queryParameters['hora'];
 
         if (rotaIdStr != null) {
           final rotaId = int.tryParse(rotaIdStr);
@@ -135,6 +136,7 @@ final _router = GoRouter(
             return _DetalhesViagemResolverPage(
               rotaId: rotaId,
               sentidoStr: sentidoStr ?? 'IDA',
+              hora: hora,
             );
           }
         }
@@ -255,10 +257,12 @@ class _DetalhesViagemResolverPage extends ConsumerWidget {
   const _DetalhesViagemResolverPage({
     required this.rotaId,
     required this.sentidoStr,
+    this.hora,
   });
 
   final int rotaId;
   final String sentidoStr;
+  final String? hora;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -296,16 +300,16 @@ class _DetalhesViagemResolverPage extends ConsumerWidget {
             : 'Consulte';
 
         final itinerarioFallback = [
-          ParadaItinerario(parada: origem, horario: '', descricao: 'Partida'),
+          ParadaItinerario(parada: origem, horario: hora ?? '', descricao: 'Partida'),
           ParadaItinerario(parada: destino, horario: '', descricao: 'Chegada'),
         ];
 
         final duracaoStr = rota.distanciaKm != null
             ? '${(rota.distanciaKm! * 1.15).round()} min'
-            : '1h 45m';
+            : 'A consultar';
         final distanciaStr = rota.distanciaKm != null
             ? '${rota.distanciaKm} km'
-            : '85 km';
+            : 'A consultar';
 
         final detalhes = DetalhesViagem(
           codigo: rota.linha,
@@ -314,7 +318,7 @@ class _DetalhesViagemResolverPage extends ConsumerWidget {
           origem: origem,
           destino: destino,
           itinerario: itinerarioFallback,
-          horaSaida: null,
+          horaSaida: hora,
           duracao: duracaoStr,
           distancia: distanciaStr,
           tipoLinha: 'Transporte Intermunicipal',

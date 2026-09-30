@@ -7,6 +7,7 @@ import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/domain/entities/horario.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/parada_itinerario.dart';
+import 'package:passai/domain/entities/rota.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/resultados_provider.dart';
@@ -46,7 +47,7 @@ class ResultadosDesktopView extends ConsumerWidget {
 
     final precoPadraoStr = rota.tarifa != null
         ? 'R\$ ${rota.tarifa!.toStringAsFixed(2).replaceAll('.', ',')}'
-        : 'R\$ 15,00';
+        : 'Consulte';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -451,6 +452,7 @@ class ResultadosDesktopView extends ConsumerWidget {
                                   child: RepaintBoundary(
                                     child: _DesktopViagemCard(
                                       horario: horario,
+                                      rota: rota,
                                       origem: origemExibida,
                                       destino: destinoExibido,
                                       precoStr: precoPadraoStr,
@@ -487,6 +489,7 @@ class ResultadosDesktopView extends ConsumerWidget {
 class _DesktopViagemCard extends StatelessWidget {
   const _DesktopViagemCard({
     required this.horario,
+    required this.rota,
     required this.origem,
     required this.destino,
     required this.precoStr,
@@ -495,6 +498,7 @@ class _DesktopViagemCard extends StatelessWidget {
   });
 
   final Horario horario;
+  final Rota rota;
   final String origem;
   final String destino;
   final String precoStr;
@@ -658,8 +662,13 @@ class _DesktopViagemCard extends StatelessWidget {
                     ),
                   ];
 
-                  final duracaoStr = horario.duracao ?? '1h 45m';
-                  const distanciaStr = '85 km';
+                  final duracaoStr = horario.duracao ??
+                      (rota.distanciaKm != null
+                          ? '${(rota.distanciaKm! * 1.15).round()} min'
+                          : 'A consultar');
+                  final distanciaStr = rota.distanciaKm != null
+                      ? '${rota.distanciaKm} km'
+                      : 'A consultar';
 
                   final detalhes = DetalhesViagem(
                     codigo: horario.nomeRota ?? '$origem x $destino',
@@ -676,12 +685,16 @@ class _DesktopViagemCard extends StatelessWidget {
                         horario.alteracao?.vanOriginal,
                     vanOriginal: horario.alteracao?.vanOriginal,
                     vanSubstituta: horario.alteracao?.vanSubstituta,
+                    via: rota.via,
+                    diasOperacao: rota.diasOperacao,
+                    seccionamentos: rota.seccionamentos,
                     alterado: horario.alterado,
                     alteracaoMotivo: horario.alteracao?.motivo,
                   );
 
+                  final horaEncoded = Uri.encodeComponent(horario.hora);
                   context.push(
-                    '${AppRoutes.detalhesViagem}?rotaId=$rotaId&sentido=$sentido',
+                    '${AppRoutes.detalhesViagem}?rotaId=$rotaId&sentido=$sentido&hora=$horaEncoded',
                     extra: DetalhesViagemArgs(
                       detalhes: detalhes,
                       rotaId: rotaId,

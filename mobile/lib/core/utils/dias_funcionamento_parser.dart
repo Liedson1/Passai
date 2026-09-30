@@ -45,6 +45,16 @@ class DiasFuncionamentoParser {
       return weekday == 3 || weekday == 5;
     }
 
+    // "Sábado e Domingo" / "Fins de Semana" → 6 e 7
+    if (r.contains('sábado e domingo') ||
+        r.contains('sabado e domingo') ||
+        r.contains('sábados e domingos') ||
+        r.contains('sabados e domingos') ||
+        r.contains('fim de semana') ||
+        r.contains('finais de semana')) {
+      return weekday == 6 || weekday == 7;
+    }
+
     // ── Dias isolados ────────────────────────────────────────────────────────
 
     if (r == 'segunda' || r.contains('segunda-feira')) {

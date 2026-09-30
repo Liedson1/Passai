@@ -421,11 +421,11 @@ class _ResultadosList extends StatelessWidget {
                     final duracaoStr = horario.duracao ??
                         (rota.distanciaKm != null
                             ? '${(rota.distanciaKm! * 1.15).round()} min'
-                            : '1h 45m');
+                            : 'A consultar');
 
                     final distanciaStr = rota.distanciaKm != null
                         ? '${rota.distanciaKm} km'
-                        : '85 km';
+                        : 'A consultar';
 
                     final detalhes = DetalhesViagem(
                       codigo: horario.nomeRota ?? rota.linha,
@@ -449,12 +449,14 @@ class _ResultadosList extends StatelessWidget {
                       alteracaoMotivo: horario.alteracao?.motivo,
                     );
 
+                    final sentidoStr = sentido == Sentido.ida ? 'IDA' : 'VOLTA';
+                    final horaEncoded = Uri.encodeComponent(horario.hora);
                     context.push(
-                      '${AppRoutes.detalhesViagem}?rotaId=${rota.id}&sentido=${sentido == Sentido.ida ? 'IDA' : 'VOLTA'}',
+                      '${AppRoutes.detalhesViagem}?rotaId=${rota.id}&sentido=$sentidoStr&hora=$horaEncoded',
                       extra: DetalhesViagemArgs(
                         detalhes: detalhes,
                         rotaId: rota.id,
-                        sentido: sentido == Sentido.ida ? 'IDA' : 'VOLTA',
+                        sentido: sentidoStr,
                       ),
                     );
                   },
@@ -582,7 +584,11 @@ class _ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              message,
+              message.contains('Exception') ||
+                      message.contains('Socket') ||
+                      message.contains('Postgrest')
+                  ? 'Não foi possível carregar os horários. Verifique sua conexão e tente novamente.'
+                  : message,
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyRegular(
                 fontSize: 13,

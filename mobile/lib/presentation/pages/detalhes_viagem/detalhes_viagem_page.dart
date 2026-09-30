@@ -470,7 +470,8 @@ class _DetalhesAppBar extends StatelessWidget {
       final p = detalhes.itinerario[i];
       buffer.writeln('${i + 1}. ${p.parada} ${p.horario.isNotEmpty ? "(${p.horario})" : ""}');
     }
-    buffer.writeln('\nConsulte horários no Passaí!');
+    buffer.writeln('\nConsulte horários e itinerários no Passaí:');
+    buffer.writeln('https://passai-al.vercel.app');
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
 

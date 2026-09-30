@@ -9,6 +9,7 @@ import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
 import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
+import 'package:passai/domain/usecases/buscar_rotas.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
@@ -789,13 +790,22 @@ class _DesktopInputPillState extends State<_DesktopInputPill> {
               textEditingController: _controller,
               focusNode: _focusNode,
               optionsBuilder: (textEditingValue) {
-                final termo = textEditingValue.text.trim().toLowerCase();
+                final termo = textEditingValue.text.trim();
                 if (termo.isEmpty) return widget.cidades;
-                return widget.cidades.where(
-                  (c) => c.toLowerCase().contains(termo),
-                );
+                final termoNorm = BuscarRotas.normalizar(termo);
+                final matches = widget.cidades.where(
+                  (c) => BuscarRotas.normalizar(c).contains(termoNorm),
+                ).toList();
+
+                if (matches.length == 1 &&
+                    BuscarRotas.normalizar(matches.first) == termoNorm) {
+                  return const Iterable<String>.empty();
+                }
+
+                return matches;
               },
               onSelected: (cidade) {
+                _controller.text = cidade;
                 widget.onSelecionada(cidade);
                 _focusNode.unfocus();
               },
@@ -816,14 +826,37 @@ class _DesktopInputPillState extends State<_DesktopInputPill> {
                     TextField(
                       controller: controller,
                       focusNode: focusNode,
+                      onChanged: (text) {
+                        final trimmed = text.trim();
+                        if (trimmed.isEmpty) {
+                          widget.onLimpa();
+                        } else {
+                          final textNorm = BuscarRotas.normalizar(trimmed);
+                          final exactMatch = widget.cidades.firstWhere(
+                            (c) => BuscarRotas.normalizar(c) == textNorm,
+                            orElse: () => '',
+                          );
+                          if (exactMatch.isNotEmpty &&
+                              exactMatch != widget.valorAtual) {
+                            widget.onSelecionada(exactMatch);
+                          }
+                        }
+                      },
                       onSubmitted: (_) {
                         final text = controller.text.trim();
                         if (text.isNotEmpty) {
+                          final textNorm = BuscarRotas.normalizar(text);
                           final match = widget.cidades.firstWhere(
-                            (c) => c.toLowerCase() == text.toLowerCase(),
-                            orElse: () => '',
+                            (c) => BuscarRotas.normalizar(c) == textNorm,
+                            orElse: () {
+                              return widget.cidades.firstWhere(
+                                (c) => BuscarRotas.normalizar(c).contains(textNorm),
+                                orElse: () => '',
+                              );
+                            },
                           );
                           if (match.isNotEmpty) {
+                            controller.text = match;
                             widget.onSelecionada(match);
                             focusNode.unfocus();
                           }
