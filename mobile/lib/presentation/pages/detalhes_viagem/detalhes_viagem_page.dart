@@ -9,6 +9,8 @@ import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/presentation/providers/paradas_provider.dart';
 import 'package:passai/presentation/widgets/responsive_shell.dart';
+import 'package:passai/presentation/widgets/web/web_navbar.dart';
+import 'package:passai/presentation/widgets/web/web_footer.dart';
 
 /// Argumentos de navegação para a tela de detalhes da viagem
 class DetalhesViagemArgs {
@@ -47,6 +49,131 @@ class DetalhesViagemPage extends ConsumerWidget {
           ))
         : null;
 
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
+    final contentItems = [
+      // 1. Card de resumo da rota
+      _RouteSummaryCard(detalhes: detalhes),
+      const SizedBox(height: 12),
+
+      // 2. Informações do veículo
+      _VeiculoCard(detalhes: detalhes),
+      const SizedBox(height: 20),
+
+      // 3. Seção de itinerário
+      if (paradasAsync != null)
+        paradasAsync.when(
+          loading: () => _SecaoItinerario(
+            detalhes: detalhes,
+            itinerario: detalhes.itinerario,
+            isLoading: true,
+          ),
+          error: (_, __) => _SecaoItinerario(
+            detalhes: detalhes,
+            itinerario: detalhes.itinerario,
+          ),
+          data: (paradas) {
+            final listaBruta =
+                paradas.isNotEmpty ? paradas : detalhes.itinerario;
+            final itinerarioProcessado = _enriquecerItinerario(
+              paradas: listaBruta,
+              horaSaida: detalhes.horaSaida,
+              duracaoStr: detalhes.duracao,
+              chegadaPrevista: detalhes.chegadaPrevista,
+              origemFallback: detalhes.origem,
+              destinoFallback: detalhes.destino,
+            );
+            return _SecaoItinerario(
+              detalhes: detalhes,
+              itinerario: itinerarioProcessado,
+            );
+          },
+        )
+      else
+        _SecaoItinerario(
+          detalhes: detalhes,
+          itinerario: _enriquecerItinerario(
+            paradas: detalhes.itinerario,
+            horaSaida: detalhes.horaSaida,
+            duracaoStr: detalhes.duracao,
+            chegadaPrevista: detalhes.chegadaPrevista,
+            origemFallback: detalhes.origem,
+            destinoFallback: detalhes.destino,
+          ),
+        ),
+      const SizedBox(height: 16),
+
+      // 4. Card de recomendação
+      _RecomendacaoCard(detalhes: detalhes),
+      const SizedBox(height: 24),
+
+      // 5. Ações do rodapé
+      _AcoesFooter(detalhes: detalhes, args: args),
+    ];
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            children: [
+              const RepaintBoundary(child: WebNavbar()),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 960),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 36,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (context.canPop()) {
+                                context.pop();
+                              } else {
+                                context.go(AppRoutes.home);
+                              }
+                            },
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.arrow_back_rounded,
+                                  size: 18,
+                                  color: AppColors.textPrimary,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Voltar para resultados',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        ...contentItems,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const RepaintBoundary(child: WebFooter()),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ResponsiveShell(
       child: PopScope(
         canPop: false,
@@ -71,66 +198,7 @@ class DetalhesViagemPage extends ConsumerWidget {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
                 sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // 1. Card de resumo da rota
-                    _RouteSummaryCard(detalhes: detalhes),
-                    const SizedBox(height: 12),
-
-                    // 3. Informações do veículo
-                    _VeiculoCard(detalhes: detalhes),
-                    const SizedBox(height: 20),
-
-                    // 4. Seção de itinerário
-                    if (paradasAsync != null)
-                      paradasAsync.when(
-                        loading: () => _SecaoItinerario(
-                          detalhes: detalhes,
-                          itinerario: detalhes.itinerario,
-                          isLoading: true,
-                        ),
-                        error: (_, __) => _SecaoItinerario(
-                          detalhes: detalhes,
-                          itinerario: detalhes.itinerario,
-                        ),
-                        data: (paradas) {
-                          final listaBruta = paradas.isNotEmpty
-                              ? paradas
-                              : detalhes.itinerario;
-                          final itinerarioProcessado = _enriquecerItinerario(
-                            paradas: listaBruta,
-                            horaSaida: detalhes.horaSaida,
-                            duracaoStr: detalhes.duracao,
-                            chegadaPrevista: detalhes.chegadaPrevista,
-                            origemFallback: detalhes.origem,
-                            destinoFallback: detalhes.destino,
-                          );
-                          return _SecaoItinerario(
-                            detalhes: detalhes,
-                            itinerario: itinerarioProcessado,
-                          );
-                        },
-                      )
-                    else
-                      _SecaoItinerario(
-                        detalhes: detalhes,
-                        itinerario: _enriquecerItinerario(
-                          paradas: detalhes.itinerario,
-                          horaSaida: detalhes.horaSaida,
-                          duracaoStr: detalhes.duracao,
-                          chegadaPrevista: detalhes.chegadaPrevista,
-                          origemFallback: detalhes.origem,
-                          destinoFallback: detalhes.destino,
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-
-                    // 5. Card de recomendação
-                    _RecomendacaoCard(detalhes: detalhes),
-                    const SizedBox(height: 24),
-
-                    // 6. Ações do rodapé
-                    _AcoesFooter(detalhes: detalhes),
-                  ]),
+                  delegate: SliverChildListDelegate(contentItems),
                 ),
               ),
             ],
@@ -221,8 +289,8 @@ class DetalhesViagemPage extends ConsumerWidget {
 
         ponto = item.descricao != null && item.descricao!.isNotEmpty
             ? item.descricao
-            : 'Parada intermediária • AL-220';
-        observacao = 'Embarque e desembarque rápido';
+            : (item.parada.isNotEmpty ? item.parada : 'Parada intermediária');
+        observacao = item.observacao ?? 'Embarque e desembarque rápido';
       }
 
       resultado.add(
@@ -1280,12 +1348,18 @@ class _RecomendacaoCard extends StatelessWidget {
 // 7. Ações no Rodapé
 // ---------------------------------------------------------------------------
 class _AcoesFooter extends StatelessWidget {
-  const _AcoesFooter({required this.detalhes});
+  const _AcoesFooter({required this.detalhes, this.args});
 
   final DetalhesViagem detalhes;
+  final DetalhesViagemArgs? args;
 
   @override
   Widget build(BuildContext context) {
+    final origemVolta = detalhes.destino ??
+        (detalhes.itinerario.isNotEmpty ? detalhes.itinerario.last.parada : '');
+    final destinoVolta = detalhes.origem ??
+        (detalhes.itinerario.isNotEmpty ? detalhes.itinerario.first.parada : '');
+
     return Column(
       children: [
         // Botão primário — Compartilhar
@@ -1309,37 +1383,35 @@ class _AcoesFooter extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 10),
-
-        // Botão secundário — Ver rota inversa
-        SizedBox(
-          width: double.infinity,
-          height: 46,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Busca de rota inversa em desenvolvimento.'),
-                  backgroundColor: AppColors.primaryDark,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        if (origemVolta.isNotEmpty && destinoVolta.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          // Botão secundário — Ver horários de volta (funcional)
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                final sentidoInverso = args?.sentido == 'IDA' ? 'volta' : 'ida';
+                context.push(
+                  '${AppRoutes.resultados}?origem=${Uri.encodeComponent(origemVolta)}&destino=${Uri.encodeComponent(destinoVolta)}&sentido=$sentidoInverso',
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.button),
                 ),
-              );
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.button),
+              ),
+              icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+              label: Text(
+                'Ver Horários de Volta ($origemVolta ➔ $destinoVolta)',
+                style: AppTextStyles.bodySemibold(fontSize: 13, color: AppColors.primary),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            icon: const Icon(Icons.swap_horiz_rounded, size: 16),
-            label: Text(
-              'Ver Rota Inversa',
-              style: AppTextStyles.bodySemibold(fontSize: 13, color: AppColors.primary),
-            ),
           ),
-        ),
+        ],
         const SizedBox(height: 10),
 
         // Botão terciário — Voltar

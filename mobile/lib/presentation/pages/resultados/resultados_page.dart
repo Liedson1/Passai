@@ -40,9 +40,12 @@ class ResultadosPage extends ConsumerStatefulWidget {
 }
 
 class _ResultadosPageState extends ConsumerState<ResultadosPage> {
+  late Sentido _sentidoAtual;
+
   @override
   void initState() {
     super.initState();
+    _sentidoAtual = widget.args.sentido;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(dataSelecionadaProvider.notifier).state = DateTime.now();
       ref.read(filtroPeriodoProvider.notifier).state = FiltroPeriodo.todos;
@@ -50,10 +53,29 @@ class _ResultadosPageState extends ConsumerState<ResultadosPage> {
   }
 
   @override
+  void didUpdateWidget(ResultadosPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.args.sentido != oldWidget.args.sentido) {
+      _sentidoAtual = widget.args.sentido;
+    }
+  }
+
+  void _inverterSentido() {
+    setState(() {
+      _sentidoAtual =
+          _sentidoAtual == Sentido.ida ? Sentido.volta : Sentido.ida;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width > 800;
     if (isDesktop) {
-      return ResultadosDesktopView(args: widget.args);
+      return ResultadosDesktopView(
+        args: widget.args,
+        sentidoAtual: _sentidoAtual,
+        onInverterSentido: _inverterSentido,
+      );
     }
 
     final dataSelecionada = ref.watch(dataSelecionadaProvider);
@@ -62,13 +84,13 @@ class _ResultadosPageState extends ConsumerState<ResultadosPage> {
 
     final params = ResultadosParams(
       rotaId: widget.args.rota.id,
-      sentido: widget.args.sentido,
+      sentido: _sentidoAtual,
       data: dataSelecionada,
     );
     final horariosAsync = ref.watch(resultadosHorariosProvider(params));
 
     final rota = widget.args.rota;
-    final sentido = widget.args.sentido;
+    final sentido = _sentidoAtual;
     final origemExibida = sentido == Sentido.ida ? rota.origem : rota.destino;
     final destinoExibido = sentido == Sentido.ida ? rota.destino : rota.origem;
 
@@ -101,6 +123,7 @@ class _ResultadosPageState extends ConsumerState<ResultadosPage> {
                 destino: destinoExibido,
                 linha: rota.linha,
                 via: rota.via,
+                onInverterSentido: _inverterSentido,
               ),
 
               // Seletor de data
@@ -181,12 +204,14 @@ class _ResultadosAppBar extends StatelessWidget {
     required this.destino,
     required this.linha,
     this.via,
+    this.onInverterSentido,
   });
 
   final String origem;
   final String destino;
   final String linha;
   final String? via;
+  final VoidCallback? onInverterSentido;
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +233,7 @@ class _ResultadosAppBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Origem → Destino
+              // Origem ⇄ Destino com botão de swap
               Row(
                 children: [
                   Flexible(
@@ -220,14 +245,38 @@ class _ResultadosAppBar extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Icon(
-                      Icons.arrow_forward,
-                      color: AppColors.textOnPrimary,
-                      size: 18,
+                  if (onInverterSentido != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Tooltip(
+                        message: 'Inverter para volta',
+                        child: Material(
+                          color: Colors.white.withValues(alpha: 0.20),
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            onTap: onInverterSentido,
+                            customBorder: const CircleBorder(),
+                            child: const Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.swap_horiz_rounded,
+                                color: AppColors.titleGold,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        color: AppColors.textOnPrimary,
+                        size: 18,
+                      ),
                     ),
-                  ),
                   Flexible(
                     child: Text(
                       destino,
@@ -401,7 +450,7 @@ class _ResultadosList extends StatelessWidget {
                     );
 
                     context.push(
-                      AppRoutes.detalhesViagem,
+                      '${AppRoutes.detalhesViagem}?rotaId=${rota.id}&sentido=${sentido == Sentido.ida ? 'IDA' : 'VOLTA'}',
                       extra: DetalhesViagemArgs(
                         detalhes: detalhes,
                         rotaId: rota.id,

@@ -19,6 +19,14 @@ class WebNavbar extends ConsumerWidget implements PreferredSizeWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pwaState = ref.watch(pwaProvider);
 
+    bool isHomeSelected = false;
+    try {
+      isHomeSelected =
+          GoRouterState.of(context).matchedLocation == AppRoutes.home;
+    } catch (_) {
+      isHomeSelected = false;
+    }
+
     return Container(
       height: 68,
       width: double.infinity,
@@ -35,7 +43,11 @@ class WebNavbar extends ConsumerWidget implements PreferredSizeWidget {
                 MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
-                    onTap: () => context.go(AppRoutes.home),
+                    onTap: () {
+                      try {
+                        context.go(AppRoutes.home);
+                      } catch (_) {}
+                    },
                     child: const PassaiLogo.horizontal(height: 30),
                   ),
                 ),
@@ -45,9 +57,12 @@ class WebNavbar extends ConsumerWidget implements PreferredSizeWidget {
                   children: [
                     _NavLink(
                       title: 'Buscar Vans',
-                      isSelected: GoRouterState.of(context).matchedLocation ==
-                          AppRoutes.home,
-                      onTap: () => context.go(AppRoutes.home),
+                      isSelected: isHomeSelected,
+                      onTap: () {
+                        try {
+                          context.go(AppRoutes.home);
+                        } catch (_) {}
+                      },
                     ),
                     if ((pwaState.canInstall || pwaState.isIos) &&
                         !pwaState.isStandalone &&

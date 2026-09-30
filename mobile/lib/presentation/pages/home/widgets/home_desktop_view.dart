@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/constants/popular_routes.dart';
 import 'package:passai/core/errors/exceptions.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
@@ -14,72 +15,6 @@ import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/web/web_footer.dart';
 import 'package:passai/presentation/widgets/web/web_navbar.dart';
 import 'why_passai_section.dart';
-
-/// Configuração de uma rota em destaque na Home Desktop
-class _DesktopRotaDestaque {
-  const _DesktopRotaDestaque({
-    required this.origem,
-    required this.destino,
-    this.via,
-    required this.preco,
-    this.horarioSaida = '13:40',
-    required this.fallbackId,
-  });
-
-  final String origem;
-  final String destino;
-  final String? via;
-  final String preco;
-  final String horarioSaida;
-  final int fallbackId;
-}
-
-const _destaquesDesktop = [
-  _DesktopRotaDestaque(
-    origem: 'Arapiraca',
-    destino: 'Maceió',
-    via: 'via Litoral',
-    preco: 'R\$ 36,00',
-    horarioSaida: '06:00',
-    fallbackId: 6,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Arapiraca',
-    destino: 'Olho d\'Água das Flores',
-    preco: 'R\$ 28,00',
-    horarioSaida: '06:30',
-    fallbackId: 54,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Palmeira dos Índios',
-    destino: 'Arapiraca',
-    preco: 'R\$ 10,00',
-    horarioSaida: '05:30',
-    fallbackId: 67,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Água Branca',
-    destino: 'Delmiro Gouveia',
-    via: 'via Lagoa das Pedras',
-    preco: 'R\$ 12,00',
-    horarioSaida: '15:10',
-    fallbackId: 2,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Delmiro Gouveia',
-    destino: 'Arapiraca',
-    preco: 'R\$ 29,30',
-    horarioSaida: '13:40',
-    fallbackId: 26,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Piranhas',
-    destino: 'Delmiro Gouveia',
-    preco: 'R\$ 18,00',
-    horarioSaida: '15:00',
-    fallbackId: 78,
-  ),
-];
 
 /// Visualização Web Desktop completa da Home (reprodução fiel ao mockup)
 class HomeDesktopView extends ConsumerStatefulWidget {
@@ -130,7 +65,7 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
       if (resultados.isNotEmpty) {
         final match = resultados.first;
         context.push(
-          AppRoutes.resultados,
+          '${AppRoutes.resultados}?origem=${Uri.encodeComponent(origem.trim())}&destino=${Uri.encodeComponent(destino.trim())}&sentido=${match.sentido.name}',
           extra: ResultadosArgs(
             rota: match.rota,
             sentido: match.sentido,
@@ -484,7 +419,7 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                       const SizedBox(height: 24),
 
                       // Lista de Cards de Rotas Populares
-                      ..._destaquesDesktop.map((destaque) {
+                      ...rotasPopularesDestaque.map((destaque) {
                         // Localiza rota no banco considerando origem, destino e via se especificada
                         Rota? rotaEncontrada = todasRotas.where((r) {
                           final matchOrig = r.origem.toLowerCase().contains(destaque.origem.toLowerCase());
@@ -513,12 +448,11 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                               origem: destaque.origem,
                               destino: destaque.destino,
                               diasOperacao: 'Diariamente',
+                              tarifa: destaque.precoPadrao,
                             );
 
-                        final tarifa = rotaFinal.tarifa;
-                        final precoFormatado = tarifa != null
-                            ? 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}'
-                            : destaque.preco;
+                        final tarifa = rotaFinal.tarifa ?? destaque.precoPadrao;
+                        final precoFormatado = 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}';
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -570,7 +504,7 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                               );
 
                               context.push(
-                                AppRoutes.detalhesViagem,
+                                '${AppRoutes.detalhesViagem}?rotaId=${rotaFinal.id}&sentido=${sentido == Sentido.ida ? 'IDA' : 'VOLTA'}',
                                 extra: DetalhesViagemArgs(
                                   detalhes: detalhes,
                                   rotaId: rotaFinal.id,
@@ -580,7 +514,7 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                             },
                             onTap: () {
                               context.push(
-                                AppRoutes.resultados,
+                                '${AppRoutes.resultados}?origem=${Uri.encodeComponent(destaque.origem)}&destino=${Uri.encodeComponent(destaque.destino)}&sentido=${sentido.name}',
                                 extra: ResultadosArgs(
                                   rota: rotaFinal,
                                   sentido: sentido,

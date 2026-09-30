@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/constants/popular_routes.dart';
 import 'package:passai/core/errors/exceptions.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
@@ -427,7 +428,7 @@ class _SearchCardState extends ConsumerState<_SearchCard> {
       if (resultados.isNotEmpty) {
         final match = resultados.first;
         context.push(
-          AppRoutes.resultados,
+          '${AppRoutes.resultados}?origem=${Uri.encodeComponent(origem)}&destino=${Uri.encodeComponent(destino)}&sentido=${match.sentido.name}',
           extra: ResultadosArgs(
             rota: match.rota,
             sentido: match.sentido,
@@ -788,78 +789,10 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
 
 
 // ---------------------------------------------------------------------------
-// Configuração das rotas de destaque
-// ---------------------------------------------------------------------------
-class _RotaDestaqueConfig {
-  final String origem;
-  final String destino;
-  final String? via;
-  final String descricao;
-  final double? precoPadrao;
-  final int fallbackId;
-  final String horarioSaida;
-
-  const _RotaDestaqueConfig({
-    required this.origem,
-    required this.destino,
-    this.via,
-    required this.descricao,
-    this.precoPadrao,
-    required this.fallbackId,
-    this.horarioSaida = '06:00',
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Seção de rotas populares em destaque
 // ---------------------------------------------------------------------------
 class _RotasPopularesSection extends ConsumerWidget {
   const _RotasPopularesSection();
-
-  static const _destaques = [
-    _RotaDestaqueConfig(
-      origem: 'Arapiraca',
-      destino: 'Maceió',
-      via: 'via Litoral',
-      descricao: 'Dois maiores polos do estado • via Litoral',
-      precoPadrao: 36.00,
-      fallbackId: 6,
-      horarioSaida: '06:00',
-    ),
-    _RotaDestaqueConfig(
-      origem: 'Arapiraca',
-      destino: 'Olho d\'Água das Flores',
-      descricao: 'Importante ligação do Sertão',
-      precoPadrao: 28.00,
-      fallbackId: 54,
-      horarioSaida: '06:30',
-    ),
-    _RotaDestaqueConfig(
-      origem: 'Palmeira dos Índios',
-      destino: 'Arapiraca',
-      descricao: 'Cidades próximas, fluxo constante',
-      precoPadrao: 10.00,
-      fallbackId: 67,
-      horarioSaida: '05:30',
-    ),
-    _RotaDestaqueConfig(
-      origem: 'Água Branca',
-      destino: 'Delmiro Gouveia',
-      via: 'via Lagoa das Pedras',
-      descricao: 'Linha tradicional do Alto Sertão',
-      precoPadrao: 12.00,
-      fallbackId: 2,
-      horarioSaida: '15:10',
-    ),
-    _RotaDestaqueConfig(
-      origem: 'Delmiro Gouveia',
-      destino: 'Arapiraca',
-      descricao: 'Ligação Alto Sertão ao Agreste',
-      precoPadrao: 29.30,
-      fallbackId: 26,
-      horarioSaida: '13:40',
-    ),
-  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -876,7 +809,7 @@ class _RotasPopularesSection extends ConsumerWidget {
               style: AppTextStyles.headingMD(color: AppColors.textPrimary),
             ),
             Text(
-              '5 principais',
+              '${rotasPopularesDestaque.length} principais',
               style: AppTextStyles.bodyMedium(
                 fontSize: 12,
                 color: AppColors.textSecondary,
@@ -887,10 +820,10 @@ class _RotasPopularesSection extends ConsumerWidget {
         const SizedBox(height: 12),
         Column(
           children: [
-            for (int index = 0; index < _destaques.length; index++) ...[
+            for (int index = 0; index < rotasPopularesDestaque.length; index++) ...[
               if (index > 0) const SizedBox(height: 10),
               () {
-                final config = _destaques[index];
+                final config = rotasPopularesDestaque[index];
 
                 // Procura a rota no banco de dados tanto na ida quanto na volta
                 Rota rota;
@@ -927,9 +860,7 @@ class _RotasPopularesSection extends ConsumerWidget {
                 }
 
                 final tarifa = rota.tarifa ?? config.precoPadrao;
-                final precoStr = tarifa != null
-                    ? 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}'
-                    : 'Consultar';
+                final precoStr = 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}';
 
                 return PopularRouteCard(
                   key: ValueKey('${config.origem}-${config.destino}'),
@@ -942,7 +873,7 @@ class _RotasPopularesSection extends ConsumerWidget {
                     subtitle: config.descricao,
                   ),
                   onTap: () => context.push(
-                    AppRoutes.resultados,
+                    '${AppRoutes.resultados}?origem=${Uri.encodeComponent(config.origem)}&destino=${Uri.encodeComponent(config.destino)}&sentido=${sentido.name}',
                     extra: ResultadosArgs(
                       rota: rota,
                       sentido: sentido,
@@ -990,7 +921,7 @@ class _RotasPopularesSection extends ConsumerWidget {
                     );
 
                     context.push(
-                      AppRoutes.detalhesViagem,
+                      '${AppRoutes.detalhesViagem}?rotaId=${rota.id}&sentido=${sentido == Sentido.ida ? 'IDA' : 'VOLTA'}',
                       extra: DetalhesViagemArgs(
                         detalhes: detalhes,
                         rotaId: rota.id,

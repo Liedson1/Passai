@@ -15,9 +15,16 @@ import 'package:passai/presentation/widgets/web/web_navbar.dart';
 
 /// Visualização Web Desktop para a página de Resultados de Viagem (fiel ao mockup)
 class ResultadosDesktopView extends ConsumerWidget {
-  const ResultadosDesktopView({super.key, required this.args});
+  const ResultadosDesktopView({
+    super.key,
+    required this.args,
+    this.sentidoAtual,
+    this.onInverterSentido,
+  });
 
   final ResultadosArgs args;
+  final Sentido? sentidoAtual;
+  final VoidCallback? onInverterSentido;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,15 +32,15 @@ class ResultadosDesktopView extends ConsumerWidget {
     final filtro = ref.watch(filtroPeriodoProvider);
     final dias = gerarDiasSeletor(dataSelecionada);
 
+    final sentido = sentidoAtual ?? args.sentido;
     final params = ResultadosParams(
       rotaId: args.rota.id,
-      sentido: args.sentido,
+      sentido: sentido,
       data: dataSelecionada,
     );
     final horariosAsync = ref.watch(resultadosHorariosProvider(params));
 
     final rota = args.rota;
-    final sentido = args.sentido;
     final origemExibida = sentido == Sentido.ida ? rota.origem : rota.destino;
     final destinoExibido = sentido == Sentido.ida ? rota.destino : rota.origem;
 
@@ -126,14 +133,38 @@ class ResultadosDesktopView extends ConsumerWidget {
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 10),
-                              child: Icon(
-                                Icons.arrow_forward_rounded,
-                                color: AppColors.primary,
-                                size: 22,
+                            if (onInverterSentido != null)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: Tooltip(
+                                  message: 'Inverter para volta',
+                                  child: Material(
+                                    color: AppColors.primaryLight,
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      onTap: onInverterSentido,
+                                      customBorder: const CircleBorder(),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.swap_horiz_rounded,
+                                          color: AppColors.primary,
+                                          size: 22,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: AppColors.primary,
+                                  size: 22,
+                                ),
                               ),
-                            ),
                             Text(
                               destinoExibido,
                               style: const TextStyle(
@@ -650,7 +681,7 @@ class _DesktopViagemCard extends StatelessWidget {
                   );
 
                   context.push(
-                    AppRoutes.detalhesViagem,
+                    '${AppRoutes.detalhesViagem}?rotaId=$rotaId&sentido=$sentido',
                     extra: DetalhesViagemArgs(
                       detalhes: detalhes,
                       rotaId: rotaId,
