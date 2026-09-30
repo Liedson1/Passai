@@ -37,7 +37,7 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <!-- Preload Crítico para Inicialização Rápida do Motor Flutter -->
-  <link rel="preload" href="flutter_bootstrap.js?v=1.0.20260930120000" as="script">
+  <link rel="preload" href="flutter_bootstrap.js?v=1.0.20260930121500" as="script">
   <link rel="preload" href="main.dart.js" as="script">
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 
@@ -77,7 +77,11 @@
       touch-action: pan-y manipulation !important;
     }
 
-    /* Loader moderno do Passaí — feedback instantâneo (0ms) no celular e desktop */
+    /* ============================================================
+       Skeleton Shimmer do Passaí — Experiência Instantânea (0ms)
+       Exibe o layout real da página no segundo zero com transição
+       suave para o Flutter, eliminando a percepção de carregamento.
+       ============================================================ */
     #splash-loading {
       position: fixed;
       top: 0;
@@ -85,92 +89,346 @@
       width: 100%;
       height: 100%;
       background-color: #F9F6F0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       z-index: 99999;
       pointer-events: none;
-      transition: opacity 0.26s cubic-bezier(0.25, 1, 0.5, 1);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      transition: opacity 0.24s cubic-bezier(0.25, 1, 0.5, 1);
       will-change: opacity;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    .splash-loader-card {
+    @keyframes skShimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .sk-shimmer {
+      background: linear-gradient(90deg, #F3EFE9 0%, #FFFFFF 50%, #F3EFE9 100%);
+      background-size: 200% 100%;
+      animation: skShimmer 1.8s ease-in-out infinite;
+    }
+
+    /* Navbar superior */
+    .sk-navbar {
+      height: 68px;
+      width: 100%;
+      background: #D95438;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sk-navbar-inner {
+      width: 100%;
+      max-width: 1140px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sk-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sk-brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .sk-brand-text {
+      font-family: 'Jua', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: 0.5px;
+    }
+    .sk-brand-pill {
+      background: rgba(255, 255, 255, 0.22);
+      color: #FFFFFF;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .sk-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .sk-nav-link {
+      color: #FFFFFF;
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+    .sk-nav-btn {
+      background: #FFFFFF;
+      color: #D95438;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* Hero Section */
+    .sk-hero {
+      background: #D95438;
+      padding: 44px 24px 54px;
+      text-align: center;
+      color: #FFFFFF;
+      width: 100%;
+    }
+    .sk-hero-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .sk-hero-title {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin: 0 0 12px 0;
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+    .sk-gold {
+      color: #F4B342;
+    }
+    .sk-hero-subtitle {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.92);
+      margin: 0 auto 32px auto;
+      max-width: 620px;
+      line-height: 1.45;
+    }
+
+    /* Search Card */
+    .sk-card {
+      background: #FFFFFF;
+      border-radius: 22px;
+      padding: 18px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+    }
+    .sk-field {
+      flex: 1;
       display: flex;
       flex-direction: column;
+      min-width: 0;
+    }
+    .sk-field-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: #8F7D77;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+      display: flex;
       align-items: center;
-      text-align: center;
-      padding: 24px;
     }
-    .splash-loader-logo {
-      width: 76px;
-      height: 76px;
-      margin-bottom: 12px;
+    .sk-icon-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 6px;
+      display: inline-block;
     }
-    .splash-loader-logo img {
-      width: 76px;
-      height: 76px;
-      object-fit: contain;
-      border-radius: 18px;
-    }
-    .splash-loader-title {
-      font-family: 'Jua', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 26px;
-      color: #D95438;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-    .splash-loader-subtitle {
-      font-size: 13px;
+    .sk-dot-origin { background: #D95438; }
+    .sk-dot-dest { background: #2E6B9E; }
+
+    .sk-input-placeholder {
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 14px;
       font-weight: 500;
-      color: #8F7D77;
-      margin-bottom: 20px;
+      color: #7B726B;
+      border: 1px solid #EFEAE3;
     }
-    .splash-loader-bar {
-      width: 130px;
-      height: 4px;
-      background: rgba(217, 84, 56, 0.15);
-      border-radius: 4px;
-      overflow: hidden;
-      position: relative;
+    .sk-swap-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #FDF4F2;
+      border: 1px solid rgba(217, 84, 56, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
-    .splash-loader-progress {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 40%;
-      height: 100%;
+    .sk-action-btn {
+      height: 48px;
+      padding: 0 24px;
       background: #D95438;
-      border-radius: 4px;
-      animation: splashPulse 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      color: #FFFFFF;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(217, 84, 56, 0.35);
     }
-    @keyframes splashPulse {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(250%); }
+
+    /* Body com badges e rotas */
+    .sk-body {
+      max-width: 980px;
+      margin: 28px auto 48px;
+      padding: 0 20px;
     }
-    .splash-loader-status {
-      margin-top: 14px;
-      font-size: 13px;
-      font-weight: 500;
-      color: #8F7D77;
-      min-height: 18px;
-      transition: opacity 0.3s ease;
+    .sk-badges-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .sk-badge-pill {
+      background: #FFFFFF;
+      border: 1px solid #EAE5DE;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #5C524E;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .sk-badge-check {
+      color: #2E7D32;
+      font-weight: bold;
+    }
+    .sk-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .sk-route-card {
+      height: 104px;
+      border-radius: 16px;
+      background: #FFFFFF;
+      border: 1px solid #EAE5DE;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .sk-navbar { height: 58px; }
+      .sk-nav-actions { display: none; }
+      .sk-hero { padding: 24px 16px 36px !important; }
+      .sk-hero-title { font-size: 26px !important; line-height: 1.25 !important; }
+      .sk-hero-subtitle { font-size: 13px !important; margin-bottom: 24px !important; }
+      .sk-card { flex-direction: column !important; padding: 16px !important; gap: 12px !important; }
+      .sk-swap-btn { margin: 2px auto !important; transform: rotate(90deg); }
+      .sk-action-btn { width: 100% !important; height: 50px !important; margin-top: 6px; }
+      .sk-badges-row { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 6px; }
+      .sk-badge-pill { flex-shrink: 0; }
     }
   </style>
 </head>
 <body>
-  <!-- Loader Passaí: exibido tanto no celular quanto no desktop enquanto o engine inicializa -->
-  <div id="splash-loading">
-    <div class="splash-loader-card">
-      <div class="splash-loader-logo">
-        <img src="data:image/webp;base64,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" alt="Passaí" width="76" height="76">
+  <!-- Skeleton Mockup Passaí: visual instantâneo do site real no segundo zero -->
+  <div id="splash-loading" aria-hidden="true">
+    <!-- Navbar Skeleton -->
+    <header class="sk-navbar">
+      <div class="sk-navbar-inner">
+        <div class="sk-brand">
+          <img src="icons/Icon-logo.webp" alt="Passaí" class="sk-brand-icon" width="32" height="32">
+          <span class="sk-brand-text">PASSAÍ</span>
+          <span class="sk-brand-pill">ALAGOAS</span>
+        </div>
+        <div class="sk-nav-actions">
+          <div class="sk-nav-link">Buscar Vans</div>
+          <div class="sk-nav-btn">Instalar App</div>
+        </div>
       </div>
-      <div class="splash-loader-title">Passaí</div>
-      <div class="splash-loader-subtitle">Horários de Vans • Alagoas</div>
-      <div class="splash-loader-bar">
-        <div class="splash-loader-progress"></div>
+    </header>
+
+    <!-- Hero Section Skeleton -->
+    <section class="sk-hero">
+      <div class="sk-hero-inner">
+        <h1 class="sk-hero-title">Para onde você <span class="sk-gold">vai hoje?</span></h1>
+        <p class="sk-hero-subtitle">Consulte horários e tarifas das vans intermunicipais em Alagoas.</p>
+
+        <!-- Card de Busca Unificado -->
+        <div class="sk-card">
+          <div class="sk-field">
+            <div class="sk-field-label">
+              <span class="sk-icon-dot sk-dot-origin"></span>
+              ORIGEM
+            </div>
+            <div class="sk-input-placeholder sk-shimmer">
+              <span>De onde você sai?</span>
+            </div>
+          </div>
+
+          <div class="sk-swap-btn" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D95438" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"/>
+            </svg>
+          </div>
+
+          <div class="sk-field">
+            <div class="sk-field-label">
+              <span class="sk-icon-dot sk-dot-dest"></span>
+              DESTINO
+            </div>
+            <div class="sk-input-placeholder sk-shimmer">
+              <span>Para onde você vai?</span>
+            </div>
+          </div>
+
+          <div class="sk-field">
+            <div class="sk-field-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8F7D77" stroke-width="2.5" style="margin-right:4px;">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              DATA
+            </div>
+            <div class="sk-input-placeholder sk-shimmer">
+              <span>Hoje</span>
+            </div>
+          </div>
+
+          <div class="sk-action-btn">
+            <span>Buscar vans</span>
+          </div>
+        </div>
       </div>
-      <div id="splash-status" class="splash-loader-status"></div>
+    </section>
+
+    <!-- Badges e Rotas Populares Skeleton -->
+    <div class="sk-body">
+      <div class="sk-badges-row">
+        <div class="sk-badge-pill sk-shimmer">
+          <span class="sk-badge-check">✓</span> 100% gratuito e sem cadastro
+        </div>
+        <div class="sk-badge-pill sk-shimmer">
+          <span class="sk-badge-check">✓</span> Horários atualizados do dia
+        </div>
+        <div class="sk-badge-pill sk-shimmer">
+          <span class="sk-badge-check">✓</span> Tarifas oficiais de Alagoas
+        </div>
+      </div>
+
+      <div class="sk-cards-grid">
+        <div class="sk-route-card sk-shimmer"></div>
+        <div class="sk-route-card sk-shimmer"></div>
+        <div class="sk-route-card sk-shimmer"></div>
+      </div>
     </div>
   </div>
 
@@ -187,43 +445,22 @@
             if (splash && splash.parentNode) {
               splash.parentNode.removeChild(splash);
             }
-          }, 280);
+          }, 240);
         });
       }
     };
 
-    // Remove splash assim que o primeiro frame do Flutter for desenhado
+    // Remove skeleton assim que o primeiro frame do Flutter for desenhado
     window.addEventListener('flutter-first-frame', function () {
       window.removeSplashScreen();
     });
 
-    // Mensagens de progresso suaves para conexões lentas ou primeiro acesso
-    setTimeout(function() {
-      if (!splashRemoved) {
-        var statusEl = document.getElementById('splash-status');
-        if (statusEl) {
-          statusEl.textContent = 'Carregando linhas e horários...';
-        }
-      }
-    }, 2800);
-
-    setTimeout(function() {
-      if (!splashRemoved) {
-        var statusEl = document.getElementById('splash-status');
-        if (statusEl) {
-          statusEl.textContent = 'Iniciando o Passaí...';
-        }
-      }
-    }, 5500);
-
     // Fallback de emergência (apenas para falhas catastróficas ou WebGL travado)
-    // 20 segundos garante que conexões móveis não vejam tela em branco prematuramente
     setTimeout(function() {
       if (!splashRemoved) {
-        console.warn('[Passaí] Fallback de segurança acionado.');
         window.removeSplashScreen();
       }
-    }, 20000);
+    }, 15000);
 
     // ============================================================
     // Passaí PWA Controller & Native Install Interop
@@ -309,7 +546,7 @@
       });
 
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register("sw.js?v=1.0.20260930120000", { scope: "./" })
+        navigator.serviceWorker.register("sw.js?v=1.0.20260930121500", { scope: "./" })
           .then(function(reg) {
             console.log('[Passaí PWA] Service Worker registrado:', reg.scope);
 
@@ -332,6 +569,6 @@
       });
     }
   </script>
-  <script src="flutter_bootstrap.js?v=1.0.20260930120000" async></script>
+  <script src="flutter_bootstrap.js?v=1.0.20260930121500" async></script>
 </body>
 </html>
