@@ -174,6 +174,8 @@ class RotasRemoteDatasource {
   }
 
   /// Busca as paradas do itinerário de uma rota/sentido, ordenadas por [ordem].
+  /// Inclui JOIN com `cidades` para trazer latitude e longitude de cada parada,
+  /// necessário para renderizar o mapa interativo com flutter_map (RN05/RN06).
   /// Retorna lista vazia quando a rota não possui paradas cadastradas,
   /// permitindo fallback gracioso na camada de apresentação.
   Future<List<ParadaRotaModel>> fetchParadasRota({
@@ -183,7 +185,18 @@ class RotasRemoteDatasource {
     try {
       final response = await supabase
           .from('paradas_rota')
-          .select('id, rota_id, sentido, ordem, cidade, descricao')
+          .select('''
+            id,
+            rota_id,
+            sentido,
+            ordem,
+            cidade,
+            descricao,
+            cidade_info:cidades!paradas_rota_cidade_id_fkey(
+              latitude,
+              longitude
+            )
+          ''')
           .eq('rota_id', rotaId)
           .eq('sentido', sentido)
           .order('ordem', ascending: true)
@@ -193,7 +206,24 @@ class RotasRemoteDatasource {
           .map((json) => ParadaRotaModel.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw _handleError(e);
+      // Se o JOIN falhar (FK inexistente ou coluna ausente), faz fallback
+      // com a query original sem coordenadas — garantindo graceful degradation
+      try {
+        final response = await supabase
+            .from('paradas_rota')
+            .select('id, rota_id, sentido, ordem, cidade, descricao')
+            .eq('rota_id', rotaId)
+            .eq('sentido', sentido)
+            .order('ordem', ascending: true)
+            .timeout(_timeout);
+
+        return (response as List)
+            .map((json) => ParadaRotaModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } catch (fallbackError) {
+        throw _handleError(fallbackError);
+      }
     }
   }
 }
+
