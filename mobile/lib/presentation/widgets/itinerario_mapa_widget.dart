@@ -411,10 +411,12 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
     // Usa traçado OSRM quando disponível, senão os pontos diretos
     final pontosPolyline = _rotaOsrm.isNotEmpty ? _rotaOsrm : pontosBase;
 
-    // URL dos tiles CartoDB Voyager (CORS aberto nativo para Web, com suporte a subdomínios a-d)
-    final tileUrl = AppConstants.cartoApiKey.isNotEmpty
+    final hasCartoKey = AppConstants.cartoApiKey.isNotEmpty;
+    // Quando houver CARTO_API_KEY, utiliza CartoDB Voyager autenticado.
+    // Sem chave, utiliza OpenStreetMap Humanitarian (HOT), com CORS aberto nativo para Web e sem marca d'água "API KEY REQUIRED".
+    final tileUrl = hasCartoKey
         ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${AppConstants.cartoApiKey}'
-        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+        : 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
 
     // Reutiliza marcadores cacheados se a seleção não mudou
     if (_marcadoresCache == null || _ultimaSelecao != _paradaSelecionada) {
@@ -460,14 +462,15 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
                     ),
                   ),
                   children: [
-                    // CartoDB Voyager com API Key (elimina o watermark "API KEY REQUIRED")
                     TileLayer(
                       urlTemplate: tileUrl,
-                      subdomains: const ['a', 'b', 'c', 'd'],
+                      subdomains: hasCartoKey
+                          ? const ['a', 'b', 'c', 'd']
+                          : const ['a', 'b', 'c'],
                       userAgentPackageName: 'app.passai.alagoas',
                       maxZoom: 19,
-                      keepBuffer: 5, // Mantém 5 tiles extras ao redor para pan suave
-                      panBuffer: 1, // Pré-carrega 1 tile de buffer em cada direção
+                      keepBuffer: 5,
+                      panBuffer: 1,
                     ),
 
                     // Polylines no estilo Google Maps (casing de contraste + linha principal)
