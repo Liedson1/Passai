@@ -313,5 +313,25 @@ void main() {
       expect(find.text('Jacaré dos Homens'), findsOneWidget);
       expect(find.text("Olho d'Água das Flores"), findsOneWidget);
     });
+
+    test('decodePolyline deve decodificar coordenadas negativas de Alagoas sem overflow de inteiros Web', () {
+      // String real de polyline da rota Olho d'Água das Flores x Arapiraca
+      const geom = "lpey@|~rbFm@JFp@p@AV?LCDCFQPa@HMJCzGaAPCVKZExB]z@K~@OlASnAaAfB_BPMxE_E@At@GDFp@lADFRFPFH?HCFKFOIKUa@cA_BOWk@eAS]IOaBkC]g@Si@Me@Gy@";
+      final points = ItinerarioMapaWidget.decodePolyline(geom);
+
+      expect(points, isNotEmpty);
+      // Primeiro ponto deve corresponder com precisão a Olho d'Água das Flores (-9.53, -37.29)
+      expect(points.first.latitude, closeTo(-9.536, 0.01));
+      expect(points.first.longitude, closeTo(-37.294, 0.01));
+
+      // Nenhuma coordenada pode ter explodido em escala global (Dart2JS overflow bug)
+      for (final p in points) {
+        expect(p.latitude.abs(), lessThanOrEqualTo(90.0));
+        expect(p.longitude.abs(), lessThanOrEqualTo(180.0));
+        expect(p.latitude, lessThan(0.0), reason: 'Coordenadas em Alagoas devem ser no Hemisfério Sul');
+        expect(p.longitude, lessThan(0.0), reason: 'Coordenadas em Alagoas devem ser a Oeste de Greenwich');
+      }
+    });
   });
 }
+

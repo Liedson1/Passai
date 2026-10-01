@@ -45,6 +45,51 @@ class ItinerarioMapaWidget extends StatefulWidget {
 
   @override
   State<ItinerarioMapaWidget> createState() => _ItinerarioMapaWidgetState();
+
+  /// Decodifica encoded polyline (algoritmo padrão Google / OSRM).
+  ///
+  /// NOTA CRÍTICA WEB/DART2JS:
+  /// No compilador Dart2JS (Web), o operador bitwise not `~` é compilado para `(~x) >>> 0`,
+  /// o que converte números negativos em inteiros de 32 bits sem sinal (~4,29 bilhões).
+  /// Para garantir 100% de paridade e precisão matemática idêntica no Mobile (Dart VM)
+  /// e na Web (JavaScript), utilizamos a equivalência aritmética `~x == -((x) + 1)`,
+  /// prevenindo qualquer overflow ou corrupção de coordenadas.
+  @visibleForTesting
+  static List<LatLng> decodePolyline(String encoded) {
+    final result = <LatLng>[];
+    int index = 0;
+    int lat = 0, lng = 0;
+
+    while (index < encoded.length) {
+      int b, shift = 0, r = 0;
+      do {
+        if (index >= encoded.length) return result;
+        b = encoded.codeUnitAt(index++) - 63;
+        r |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      final deltaLat = (r & 1) != 0 ? -((r >> 1) + 1) : (r >> 1);
+      lat += deltaLat;
+
+      shift = 0;
+      r = 0;
+      do {
+        if (index >= encoded.length) return result;
+        b = encoded.codeUnitAt(index++) - 63;
+        r |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      final deltaLng = (r & 1) != 0 ? -((r >> 1) + 1) : (r >> 1);
+      lng += deltaLng;
+
+      final latDec = lat / 1e5;
+      final lngDec = lng / 1e5;
+      if (latDec.abs() <= 90 && lngDec.abs() <= 180) {
+        result.add(LatLng(latDec, lngDec));
+      }
+    }
+    return result;
+  }
 }
 
 class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
@@ -214,24 +259,44 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
   }
 
   /// Requisita o traçado OSRM para uma sequência de pontos geográficos.
+  ///
+  /// Utiliza `geometries=geojson` para obter coordenadas puras em formato numérico
+  /// [longitude, latitude], eliminando qualquer risco de perda de precisão ou erro
+  /// de decodificação bitwise entre as plataformas Mobile e Web.
   Future<List<LatLng>?> _requisitarOsrm(List<LatLng> pontos) async {
     if (pontos.length < 2) return pontos;
     final coords = pontos.map((p) => '${p.longitude},${p.latitude}').join(';');
     final uri = Uri.parse(
       'https://router.project-osrm.org/route/v1/driving/$coords'
-      '?overview=full&geometries=polyline',
+      '?overview=full&geometries=geojson',
     );
-    final response = await http.get(uri).timeout(const Duration(seconds: 8));
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final routes = data['routes'] as List?;
-      if (routes != null && routes.isNotEmpty) {
-        final geometry = (routes.first as Map)['geometry'] as String?;
-        if (geometry != null) {
-          return _decodePolyline(geometry);
+    try {
+      final response = await http.get(uri).timeout(const Duration(seconds: 8));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final routes = data['routes'] as List?;
+        if (routes != null && routes.isNotEmpty) {
+          final firstRoute = routes.first as Map<String, dynamic>;
+          final geometry = firstRoute['geometry'];
+          if (geometry is Map && geometry['coordinates'] is List) {
+            final coordsList = geometry['coordinates'] as List;
+            final pts = <LatLng>[];
+            for (final c in coordsList) {
+              if (c is List && c.length >= 2) {
+                final lon = (c[0] as num).toDouble();
+                final lat = (c[1] as num).toDouble();
+                if (lat.abs() <= 90 && lon.abs() <= 180) {
+                  pts.add(LatLng(lat, lon));
+                }
+              }
+            }
+            if (pts.isNotEmpty) return pts;
+          } else if (geometry is String) {
+            return ItinerarioMapaWidget.decodePolyline(geometry);
+          }
         }
       }
-    }
+    } catch (_) {}
     return null;
   }
 
@@ -351,34 +416,6 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
     }
   }
 
-  /// Decodifica encoded polyline (algoritmo padrão Google / OSRM).
-  List<LatLng> _decodePolyline(String encoded) {
-    final result = <LatLng>[];
-    int index = 0;
-    int lat = 0, lng = 0;
-
-    while (index < encoded.length) {
-      int b, shift = 0, r = 0;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        r |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      lat += (r & 1) != 0 ? ~(r >> 1) : r >> 1;
-
-      shift = 0;
-      r = 0;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        r |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      lng += (r & 1) != 0 ? ~(r >> 1) : r >> 1;
-
-      result.add(LatLng(lat / 1e5, lng / 1e5));
-    }
-    return result;
-  }
 
   void _selecionarParada(ParadaItinerario parada) {
     setState(() {
