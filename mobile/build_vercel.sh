@@ -55,6 +55,6 @@ if [ -n "$CARTO_API_KEY" ]; then
   DART_DEFINES="$DART_DEFINES --dart-define=CARTO_API_KEY=$CARTO_API_KEY"
 fi
 
-flutter build web --release -O4 --tree-shake-icons --no-source-maps --no-wasm-dry-run $DART_DEFINES
+flutter build web --release -O4 --no-tree-shake-icons --no-source-maps --no-wasm-dry-run $DART_DEFINES
 
 echo "=== Build concluído com sucesso ==="

@@ -489,13 +489,10 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
                       // Atualiza ValueNotifier — NÃO chama setState, zero rebuild no mapa
                       _rotacaoNotifier.value = camera.rotation;
                     },
-                    // Na Web, drag/pinch/doubleTap/rotate ativos, MAS scrollWheelZoom desativado
-                    // para evitar que o mouse wheel trave o scroll vertical da página de detalhes
+                    // Zoom via scroll wheel e touchpad habilitados com sensibilidade suave
                     interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.drag |
-                          InteractiveFlag.pinchZoom |
-                          InteractiveFlag.doubleTapZoom |
-                          InteractiveFlag.rotate,
+                      flags: InteractiveFlag.all,
+                      scrollWheelVelocity: 0.005,
                     ),
                   ),
                   children: [
@@ -538,41 +535,38 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
                 ),
 
                 // Controles de zoom, enquadramento e bússola estilo Google Maps
-                // RepaintBoundary isola os controles do repaint do mapa
                 Positioned(
-                  right: 10,
-                  bottom: 10,
-                  child: RepaintBoundary(
-                    child: _ControlesMapa(
-                      rotacaoNotifier: _rotacaoNotifier,
-                      onResetRotation: () => _mapController.rotate(0.0),
-                      onZoomIn: () {
-                        final currentZoom = _mapController.camera.zoom;
-                        _mapController.move(
-                          _mapController.camera.center,
-                          (currentZoom + 1).clamp(1.0, 19.0),
-                        );
-                      },
-                      onZoomOut: () {
-                        final currentZoom = _mapController.camera.zoom;
-                        _mapController.move(
-                          _mapController.camera.center,
-                          (currentZoom - 1).clamp(1.0, 19.0),
-                        );
-                      },
-                      onResetBounds: () {
-                        _mapController.rotate(0.0);
-                        _mapController.fitCamera(
-                          CameraFit.bounds(
-                            bounds: bounds,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 36,
-                            ),
+                  right: 12,
+                  bottom: 12,
+                  child: _ControlesMapa(
+                    rotacaoNotifier: _rotacaoNotifier,
+                    onResetRotation: () => _mapController.rotate(0.0),
+                    onZoomIn: () {
+                      final currentZoom = _mapController.camera.zoom;
+                      _mapController.move(
+                        _mapController.camera.center,
+                        (currentZoom + 1).clamp(1.0, 19.0),
+                      );
+                    },
+                    onZoomOut: () {
+                      final currentZoom = _mapController.camera.zoom;
+                      _mapController.move(
+                        _mapController.camera.center,
+                        (currentZoom - 1).clamp(1.0, 19.0),
+                      );
+                    },
+                    onResetBounds: () {
+                      _mapController.rotate(0.0);
+                      _mapController.fitCamera(
+                        CameraFit.bounds(
+                          bounds: bounds,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 36,
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -1074,27 +1068,41 @@ class _ControlesMapa extends StatelessWidget {
             if (!estaRotacionado) return const SizedBox.shrink();
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Material(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                elevation: 2,
-                shadowColor: const Color(0x33000000),
-                child: InkWell(
-                  onTap: onResetRotation,
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
-                  child: Tooltip(
-                    message: 'Redefinir orientação para o Norte',
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: Center(
-                        child: Transform.rotate(
-                          angle: -rotacao * math.pi / 180,
-                          child: const Icon(
-                            Icons.explore_rounded,
-                            size: 20,
-                            color: Color(0xFFDC2626), // Vermelho bússola Norte
+                  border: Border.all(color: AppColors.border, width: 1.0),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x2A000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: InkWell(
+                      onTap: onResetRotation,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Tooltip(
+                        message: 'Redefinir orientação para o Norte',
+                        child: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: Center(
+                            child: Transform.rotate(
+                              angle: -rotacao * math.pi / 180,
+                              child: const Icon(
+                                Icons.explore_rounded,
+                                size: 22,
+                                color: Color(0xFFDC2626), // Vermelho bússola Norte
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1106,79 +1114,109 @@ class _ControlesMapa extends StatelessWidget {
           },
         ),
 
-
         // Botão para recentralizar / enquadrar a rota inteira
-        Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          elevation: 2,
-          shadowColor: const Color(0x33000000),
-          child: InkWell(
-            onTap: onResetBounds,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            child: const Tooltip(
-              message: 'Enquadrar rota',
-              child: SizedBox(
-                width: 32,
-                height: 32,
-                child: Icon(
-                  Icons.crop_free_rounded,
-                  size: 18,
-                  color: AppColors.textPrimary,
+            border: Border.all(color: AppColors.border, width: 1.0),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x2A000000),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: InkWell(
+                onTap: onResetBounds,
+                borderRadius: BorderRadius.circular(8),
+                child: const Tooltip(
+                  message: 'Enquadrar rota',
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Icon(
+                      Icons.crop_free_rounded,
+                      size: 20,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
 
         // Agrupamento Zoom (+ e -) estilo Google Maps
-        Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          elevation: 2,
-          shadowColor: const Color(0x33000000),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InkWell(
-                onTap: onZoomIn,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                child: const Tooltip(
-                  message: 'Aproximar',
-                  child: SizedBox(
-                    width: 32,
-                    height: 30,
-                    child: Icon(
-                      Icons.add_rounded,
-                      size: 18,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                width: 24,
-                height: 0.8,
-                color: AppColors.border,
-              ),
-              InkWell(
-                onTap: onZoomOut,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
-                child: const Tooltip(
-                  message: 'Afastar',
-                  child: SizedBox(
-                    width: 32,
-                    height: 30,
-                    child: Icon(
-                      Icons.remove_rounded,
-                      size: 18,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border, width: 1.0),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x2A000000),
+                blurRadius: 4,
+                offset: Offset(0, 1),
               ),
             ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: InkWell(
+                    onTap: onZoomIn,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                    child: const Tooltip(
+                      message: 'Aproximar',
+                      child: SizedBox(
+                        width: 36,
+                        height: 34,
+                        child: Icon(
+                          Icons.add_rounded,
+                          size: 20,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 26,
+                  height: 1.0,
+                  color: AppColors.border,
+                ),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: InkWell(
+                    onTap: onZoomOut,
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                    child: const Tooltip(
+                      message: 'Afastar',
+                      child: SizedBox(
+                        width: 36,
+                        height: 34,
+                        child: Icon(
+                          Icons.remove_rounded,
+                          size: 20,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
