@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
-import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/providers/resultados_provider.dart';
@@ -407,18 +407,13 @@ class _ResultadosList extends StatelessWidget {
                             ? 'R\$ ${rota.tarifa!.toStringAsFixed(2).replaceAll('.', ',')}'
                             : 'Consulte');
 
-                    final itinerarioFallback = [
-                      ParadaItinerario(
-                        parada: origem,
-                        horario: horario.hora,
-                        descricao: 'Partida',
-                      ),
-                      ParadaItinerario(
-                        parada: destino,
-                        horario: '',
-                        descricao: 'Chegada',
-                      ),
-                    ];
+                    final itinerarioFallback = ItinerarioHelper.criarItinerarioFallback(
+                      origem: origem,
+                      destino: destino,
+                      horarioSaida: horario.hora,
+                      rotaId: rota.id,
+                      seccionamentos: rota.seccionamentos,
+                    );
 
                     final duracaoStr = horario.duracao ??
                         (rota.distanciaKm != null

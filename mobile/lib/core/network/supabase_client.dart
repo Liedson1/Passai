@@ -1,28 +1,39 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Cliente Supabase centralizado — use este getter em toda a aplicação.
 /// Nunca instancie [SupabaseClient] diretamente fora deste arquivo.
 SupabaseClient get supabase => Supabase.instance.client;
 
-/// Configurações públicas do Supabase (URL e Chave Anônima/Pública).
-/// Podem ser sobrescritas em tempo de compilação via --dart-define.
-const String _defaultSupabaseUrl = 'https://iwwduklpqbbyjhtovgjq.supabase.co';
-const String _defaultSupabaseAnonKey =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3d2R1a2xwcWJieWpodG92Z2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNjI3ODUsImV4cCI6MjEwMDgzODc4NX0.4-oweykwcrPfXFSwKi8PfU3E3nMgBii-kfpWuTOt9_0';
+bool _isConfigured = false;
 
-/// Inicializa o Supabase com as credenciais compiladas ou via --dart-define.
-/// Não realiza chamadas HTTP para arquivos .env em runtime, eliminando vazamentos de arquivos
-/// e acelerando a inicialização do app.
+/// Indica se o Supabase foi inicializado com credenciais válidas.
+bool get isSupabaseConfigured => _isConfigured;
+
+/// Inicializa o Supabase com credenciais fornecidas via `--dart-define`
+/// ou `--dart-define-from-file=.env.json`.
+///
+/// Não contém valores hardcoded no código por segurança (SEC-01).
+/// Caso as credenciais não sejam fornecidas, registra um aviso e
+/// mantém o app responsivo sem causar crash fatal antes de [runApp].
 Future<void> initSupabase() async {
   const envUrl = String.fromEnvironment('SUPABASE_URL');
   const envAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  final url = envUrl.isNotEmpty ? envUrl : _defaultSupabaseUrl;
-  final anonKey = envAnonKey.isNotEmpty ? envAnonKey : _defaultSupabaseAnonKey;
+  if (envUrl.isEmpty || envAnonKey.isEmpty) {
+    debugPrint(
+      '⚠️ [Passaí] SUPABASE_URL ou SUPABASE_ANON_KEY não foram fornecidos.\n'
+      'Para executar localmente, use: ./run.sh ou flutter run --dart-define-from-file=.env.json\n'
+      'No CI/CD ou Vercel, configure as variáveis de ambiente do projeto.',
+    );
+    _isConfigured = false;
+    return;
+  }
 
   await Supabase.initialize(
-    url: url,
-    publishableKey: anonKey,
+    url: envUrl,
+    publishableKey: envAnonKey,
   );
+  _isConfigured = true;
 }
 

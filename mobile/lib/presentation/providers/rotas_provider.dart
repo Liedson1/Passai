@@ -33,9 +33,7 @@ final cidadesProvider = FutureProvider<List<String>>((ref) {
   return ref.watch(rotasRepositoryProvider).buscarCidades();
 });
 
-/// Busca reativa de cidades por termo — usado pelo autocomplete.
-/// Usa FutureProvider.family para que cada termo tenha seu próprio cache.
-/// O índice trigram (migration 003) torna a busca eficiente no banco.
+/// Busca reativa de cidades por termo — usado pelo autocomplete
 final cidadesPorTermoProvider =
     FutureProvider.family<List<String>, String>((ref, termo) {
   return ref.watch(rotasRepositoryProvider).buscarCidades(termo: termo);

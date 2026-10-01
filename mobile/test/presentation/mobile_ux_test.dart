@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:passai/main.dart';
+import 'package:passai/core/theme/passai_scroll_behavior.dart';
 
 void main() {
   group('Mobile UX & Platform Adaptation Tests', () {

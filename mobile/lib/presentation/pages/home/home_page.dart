@@ -6,9 +6,9 @@ import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/constants/popular_routes.dart';
 import 'package:passai/core/errors/exceptions.dart';
+import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
-import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
@@ -902,18 +902,14 @@ class _RotasPopularesSection extends ConsumerWidget {
                     ),
                   ),
                   onVerDetalhes: () {
-                    final itinerarioFallback = [
-                      ParadaItinerario(
-                        parada: config.origem,
-                        horario: config.horarioSaida,
-                        descricao: 'Partida',
-                      ),
-                      ParadaItinerario(
-                        parada: config.destino,
-                        horario: '',
-                        descricao: 'Chegada',
-                      ),
-                    ];
+                    final itinerarioFallback = ItinerarioHelper.criarItinerarioFallback(
+                      origem: config.origem,
+                      destino: config.destino,
+                      horarioSaida: config.horarioSaida,
+                      rotaId: rota.id,
+                      seccionamentos: rota.seccionamentos,
+                      paradasIntermediarias: config.paradasIntermediarias,
+                    );
 
                     final duracaoStr = rota.distanciaKm != null
                         ? '${(rota.distanciaKm! * 1.15).round()} min'

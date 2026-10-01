@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/constants/popular_routes.dart';
 import 'package:passai/core/errors/exceptions.dart';
+import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
-import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
 import 'package:passai/domain/usecases/buscar_rotas.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
@@ -464,18 +464,14 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                             preco: precoFormatado,
                             horarioSaida: destaque.horarioSaida,
                             onVerDetalhes: () {
-                              final itinerarioFallback = [
-                                ParadaItinerario(
-                                  parada: destaque.origem,
-                                  horario: destaque.horarioSaida,
-                                  descricao: 'Partida',
-                                ),
-                                ParadaItinerario(
-                                  parada: destaque.destino,
-                                  horario: '',
-                                  descricao: 'Chegada',
-                                ),
-                              ];
+                              final itinerarioFallback = ItinerarioHelper.criarItinerarioFallback(
+                                origem: destaque.origem,
+                                destino: destaque.destino,
+                                horarioSaida: destaque.horarioSaida,
+                                rotaId: rotaFinal.id,
+                                seccionamentos: rotaFinal.seccionamentos,
+                                paradasIntermediarias: destaque.paradasIntermediarias,
+                              );
 
                               final duracaoStr = rotaFinal.distanciaKm != null
                                   ? '${(rotaFinal.distanciaKm! * 1.15).round()} min'

@@ -22,6 +22,13 @@ class AppConstants {
   /// IDs de rotas ativas no banco mas sem horários cadastrados.
   /// Usados para excluí-las das listagens públicas até o cadastro ser concluído.
   static const Set<int> rotasSemHorarioIds = {100};
+
+  /// Chave da API do Carto Basemaps (para tiles Voyager/Positron).
+  /// Forneça via --dart-define=CARTO_API_KEY=... em tempo de build.
+  static const String cartoApiKey = String.fromEnvironment(
+    'CARTO_API_KEY',
+    defaultValue: '',
+  );
 }
 
 /// Nomes das rotas do GoRouter — use sempre estas constantes para navegar

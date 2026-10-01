@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/utils/text_normalizer.dart';
+import 'package:passai/core/constants/coordenadas_cidades.dart';
 import 'package:passai/core/errors/exceptions.dart';
 import 'package:passai/core/network/supabase_client.dart';
 import 'package:passai/data/models/horario_model.dart';
@@ -16,23 +17,31 @@ class RotasRemoteDatasource {
   static const Duration _timeout = Duration(seconds: 10);
 
   /// Trata exceções de rede e converte para [NetworkException] ou [ServerException].
+  ///
+  /// Não usa `dart:io` (SocketException) pois é incompatível com a plataforma Web.
+  /// Usa `TimeoutException` de `dart:async` (multiplataforma) + string matching
+  /// para detectar erros de rede em todas as plataformas.
   Exception _handleError(Object error) {
-    // Verifica tipo explícito antes de recorrer ao string matching
-    if (error is SocketException || error is TimeoutException) {
+    // TimeoutException é de dart:async — funciona em todas as plataformas
+    if (error is TimeoutException) {
       return const NetworkException(
         'Sem conexão com a internet. O Passaí precisa de conexão ativa para consultar os horários em tempo real.',
       );
     }
-    // Fallback: erros de rede que chegam como mensagens genéricas
+    // Detecção de erros de rede via string matching — funciona em mobile e web
     final msg = error.toString().toLowerCase();
     const networkKeywords = [
+      'socketexception',
       'socket',
       'failed host lookup',
       'network is unreachable',
       'connection refused',
       'connection reset',
       'timed out',
+      'timeout',
       'clientexception',
+      'xmlhttprequest error', // erro de rede na web
+      'fetch error',          // erro de rede em WASM
     ];
     if (networkKeywords.any(msg.contains)) {
       return const NetworkException(
@@ -44,6 +53,11 @@ class RotasRemoteDatasource {
 
   /// Busca todas as rotas ativas com nomes das cidades de origem e destino.
   Future<List<RotaModel>> fetchTodasAsRotas() async {
+    if (!isSupabaseConfigured) {
+      throw const NetworkException(
+        'Configuração do Supabase ausente. Execute com ./run.sh ou passe o arquivo .env.json.',
+      );
+    }
     try {
       final response = await supabase
           .from('rotas')
@@ -91,9 +105,9 @@ class RotasRemoteDatasource {
       var cidades = cidadesSet.toList()..sort((a, b) => a.compareTo(b));
 
       if (termo != null && termo.trim().isNotEmpty) {
-        final termoNorm = _normalizar(termo.trim());
+        final termoNorm = TextNormalizer.normalizar(termo.trim());
         cidades = cidades
-            .where((c) => _normalizar(c).contains(termoNorm))
+            .where((c) => TextNormalizer.normalizar(c).contains(termoNorm))
             .toList();
       }
 
@@ -103,22 +117,19 @@ class RotasRemoteDatasource {
     }
   }
 
-  static String _normalizar(String str) {
-    return str
-        .toLowerCase()
-        .replaceAll(RegExp(r'[àáâãäå]'), 'a')
-        .replaceAll(RegExp(r'[èéêë]'), 'e')
-        .replaceAll(RegExp(r'[ìíîï]'), 'i')
-        .replaceAll(RegExp(r'[òóôõö]'), 'o')
-        .replaceAll(RegExp(r'[ùúûü]'), 'u')
-        .replaceAll(RegExp(r'[ç]'), 'c');
-  }
+
 
   /// Busca horários de uma rota e sentido, incluindo alteração ativa do dia.
   Future<List<HorarioModel>> fetchHorarios({
     required int rotaId,
     required String sentido,
+    DateTime? dataReferencia,
   }) async {
+    if (!isSupabaseConfigured) {
+      throw const NetworkException(
+        'Configuração do Supabase ausente. Execute com ./run.sh ou passe o arquivo .env.json.',
+      );
+    }
     try {
       final response = await supabase
           .from('horarios')
@@ -153,7 +164,10 @@ class RotasRemoteDatasource {
           .timeout(_timeout);
 
       final horarios = (response as List)
-          .map((json) => HorarioModel.fromJson(json as Map<String, dynamic>))
+          .map((json) => HorarioModel.fromJson(
+                json as Map<String, dynamic>,
+                dataReferencia: dataReferencia,
+              ))
           .toList();
 
       return horarios;
@@ -163,13 +177,18 @@ class RotasRemoteDatasource {
   }
 
   /// Busca horários para uma data específica (tela de resultados).
-  /// Filtra os horários que operam no dia da semana selecionado (RN10).
+  /// Filtra os horários que operam no dia da semana selecionado (RN10)
+  /// e aplica apenas alterações ativas da data solicitada.
   Future<List<HorarioModel>> fetchHorariosPorData({
     required int rotaId,
     required String sentido,
     required DateTime data,
   }) async {
-    final todosHorarios = await fetchHorarios(rotaId: rotaId, sentido: sentido);
+    final todosHorarios = await fetchHorarios(
+      rotaId: rotaId,
+      sentido: sentido,
+      dataReferencia: data,
+    );
     return todosHorarios.where((h) => h.toEntity().operaNoDia(data)).toList();
   }
 
@@ -193,7 +212,7 @@ class RotasRemoteDatasource {
           .from('paradas_rota')
           .select('id, rota_id, sentido, ordem, cidade, descricao, cidade_id')
           .eq('rota_id', rotaId)
-          .eq('sentido', sentido)
+          .eq('sentido', sentido.toUpperCase())
           .order('ordem', ascending: true)
           .timeout(_timeout);
 
@@ -211,30 +230,42 @@ class RotasRemoteDatasource {
           .toSet()
           .toList();
 
-      // 3. Busca coordenadas das cidades em lote (query simples por ID)
+      // 3. Busca coordenadas das cidades em lote (query simples por ID com fallback)
       final Map<int, Map<String, dynamic>> coordPorId = {};
       if (cidadeIds.isNotEmpty) {
-        final cidadesResponse = await supabase
-            .from('cidades')
-            .select('id, latitude, longitude')
-            .inFilter('id', cidadeIds)
-            .timeout(_timeout);
+        try {
+          final cidadesResponse = await supabase
+              .from('cidades')
+              .select('id, latitude, longitude')
+              .inFilter('id', cidadeIds)
+              .timeout(const Duration(seconds: 4));
 
-        for (final c in cidadesResponse as List) {
-          final cidade = c as Map<String, dynamic>;
-          final id = cidade['id'] as int?;
-          if (id != null) coordPorId[id] = cidade;
+          for (final c in cidadesResponse as List) {
+            final cidade = c as Map<String, dynamic>;
+            final id = cidade['id'] as int?;
+            if (id != null) coordPorId[id] = cidade;
+          }
+        } catch (_) {
+          // Fallback gracioso: se a query de cidades falhar, CoordenadasCidades supre os pontos
         }
       }
 
-      // 4. Mescla coordenadas nas paradas e converte para modelos
+      // 4. Mescla coordenadas canônicas oficiais ou do banco nas paradas
       return paradasJson.map((json) {
+        final nomeCidade = (json['cidade'] ?? json['parada'] ?? '') as String;
+        final coordCanonicas = CoordenadasCidades.obter(nomeCidade);
         final cidadeId = json['cidade_id'] as int?;
-        final coords = cidadeId != null ? coordPorId[cidadeId] : null;
+        final coordsDb = cidadeId != null ? coordPorId[cidadeId] : null;
+
+        final lat = coordCanonicas?.latitude ??
+            (coordsDb != null ? (coordsDb['latitude'] as num?)?.toDouble() : null);
+        final lng = coordCanonicas?.longitude ??
+            (coordsDb != null ? (coordsDb['longitude'] as num?)?.toDouble() : null);
+
         return ParadaRotaModel.fromJson({
           ...json,
-          if (coords != null) 'latitude': coords['latitude'],
-          if (coords != null) 'longitude': coords['longitude'],
+          if (lat != null) 'latitude': lat,
+          if (lng != null) 'longitude': lng,
         });
       }).toList();
     } catch (e) {

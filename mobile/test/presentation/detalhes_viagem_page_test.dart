@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,7 +8,17 @@ import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 
+import '../helpers/mock_http_client.dart';
+
 void main() {
+  setUpAll(() {
+    HttpOverrides.global = MockTestHttpOverrides();
+  });
+
+  tearDownAll(() {
+    HttpOverrides.global = null;
+  });
+
   group('DetalhesViagemPage Widget Tests', () {
     testWidgets('Deve exibir nó de chegada com a cor azul (AppColors.secondary)', (tester) async {
       const detalhes = DetalhesViagem(

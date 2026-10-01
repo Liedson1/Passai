@@ -1,3 +1,4 @@
+import 'package:passai/core/utils/text_normalizer.dart';
 import 'package:passai/data/datasources/rotas_remote_datasource.dart';
 import 'package:passai/domain/entities/horario.dart';
 import 'package:passai/domain/entities/rota.dart';
@@ -7,9 +8,10 @@ import 'package:passai/domain/repositories/rotas_repository.dart';
 /// Delega o acesso a dados para [RotasRemoteDatasource] e
 /// converte os models para entidades de domínio.
 class RotasRepositoryImpl implements RotasRepository {
-  const RotasRepositoryImpl(this._datasource);
+  RotasRepositoryImpl(this._datasource);
 
   final RotasRemoteDatasource _datasource;
+  List<String>? _cidadesCache;
 
   @override
   Future<List<Rota>> buscarTodasAsRotas() async {
@@ -18,8 +20,15 @@ class RotasRepositoryImpl implements RotasRepository {
   }
 
   @override
-  Future<List<String>> buscarCidades({String? termo}) {
-    return _datasource.fetchCidades(termo: termo);
+  Future<List<String>> buscarCidades({String? termo}) async {
+    final cidades = _cidadesCache ??= await _datasource.fetchCidades();
+    if (termo == null || termo.trim().isEmpty) {
+      return cidades;
+    }
+    final termoNorm = TextNormalizer.normalizar(termo.trim());
+    return cidades
+        .where((c) => TextNormalizer.normalizar(c).contains(termoNorm))
+        .toList();
   }
 
   @override

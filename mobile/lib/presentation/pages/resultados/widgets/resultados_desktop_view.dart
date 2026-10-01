@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/domain/entities/horario.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
-import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/domain/entities/rota.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
@@ -649,18 +649,13 @@ class _DesktopViagemCard extends StatelessWidget {
                   // Itinerário estático mínimo (partida + chegada)
                   // A tela de detalhes buscará as paradas reais do Supabase
                   // usando rotaId e sentido
-                  final itinerarioFallback = [
-                    ParadaItinerario(
-                      parada: origem,
-                      horario: horario.hora,
-                      descricao: 'Partida',
-                    ),
-                    ParadaItinerario(
-                      parada: destino,
-                      horario: '',
-                      descricao: 'Chegada',
-                    ),
-                  ];
+                  final itinerarioFallback = ItinerarioHelper.criarItinerarioFallback(
+                    origem: origem,
+                    destino: destino,
+                    horarioSaida: horario.hora,
+                    rotaId: rota.id,
+                    seccionamentos: rota.seccionamentos,
+                  );
 
                   final duracaoStr = horario.duracao ??
                       (rota.distanciaKm != null

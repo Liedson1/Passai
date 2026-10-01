@@ -9,6 +9,7 @@ class PopularRouteConfig {
     required this.precoPadrao,
     required this.fallbackId,
     required this.horarioSaida,
+    this.paradasIntermediarias = const [],
   });
 
   final String origem;
@@ -18,6 +19,7 @@ class PopularRouteConfig {
   final double precoPadrao;
   final int fallbackId;
   final String horarioSaida;
+  final List<String> paradasIntermediarias;
 
   String get precoFormatado =>
       'R\$ ${precoPadrao.toStringAsFixed(2).replaceAll('.', ',')}';
@@ -41,6 +43,7 @@ const List<PopularRouteConfig> rotasPopularesDestaque = [
     precoPadrao: 28.00,
     fallbackId: 54,
     horarioSaida: '06:30',
+    paradasIntermediarias: ['Jaramataia', 'Jacaré dos Homens'],
   ),
   PopularRouteConfig(
     origem: 'Palmeira dos Índios',

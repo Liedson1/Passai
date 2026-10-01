@@ -41,14 +41,20 @@ sed -i -E "s/const CACHE_NAME = ['\"][^'\"]*['\"];/const CACHE_NAME = 'passai-pw
 echo "{\"version\": \"$BUILD_ID\", \"builtAt\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > web/version.json
 
 echo "=== Compilando o app Flutter para Web ==="
-DART_DEFINES=""
-if [ -n "$SUPABASE_URL" ]; then
-  DART_DEFINES="$DART_DEFINES --dart-define=SUPABASE_URL=$SUPABASE_URL"
-fi
-if [ -n "$SUPABASE_ANON_KEY" ]; then
-  DART_DEFINES="$DART_DEFINES --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+
+# Validação obrigatória: sem estas variáveis o app não inicializa
+if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+  echo "ERRO: SUPABASE_URL e SUPABASE_ANON_KEY são obrigatórias."
+  echo "Configure em Vercel → Settings → Environment Variables."
+  exit 1
 fi
 
-flutter build web --release -O4 --no-source-maps --no-wasm-dry-run $DART_DEFINES
+DART_DEFINES="--dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+
+if [ -n "$CARTO_API_KEY" ]; then
+  DART_DEFINES="$DART_DEFINES --dart-define=CARTO_API_KEY=$CARTO_API_KEY"
+fi
+
+flutter build web --release -O4 --tree-shake-icons --no-source-maps --no-wasm-dry-run $DART_DEFINES
 
 echo "=== Build concluído com sucesso ==="

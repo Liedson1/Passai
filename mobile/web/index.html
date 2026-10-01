@@ -45,15 +45,37 @@
   <link rel="dns-prefetch" href="https://iwwduklpqbbyjhtovgjq.supabase.co">
 
   <title>Passaí — Horários de Vans em Alagoas</title>
-  <link rel="manifest" href="manifest.json">
+  <!-- Injeção não bloqueante do Web App Manifest para eliminar a cadeia crítica inicial (Network dependency tree) -->
+  <script>
+    (function () {
+      var link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = 'manifest.json';
+      document.head.appendChild(link);
+    })();
+  </script>
 
-  <!-- Vercel Web Analytics & Speed Insights -->
+  <!-- Vercel Web Analytics & Speed Insights (carregamento assíncrono em idle para não competir com a main thread) -->
   <script>
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    function carregarVercelInsights() {
+      var s1 = document.createElement('script');
+      s1.src = '/_vercel/insights/script.js';
+      s1.async = true;
+      document.head.appendChild(s1);
+
+      var s2 = document.createElement('script');
+      s2.src = '/_vercel/speed-insights/script.js';
+      s2.async = true;
+      document.head.appendChild(s2);
+    }
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(carregarVercelInsights, { timeout: 3000 });
+    } else {
+      setTimeout(carregarVercelInsights, 2000);
+    }
   </script>
-  <script defer src="/_vercel/insights/script.js"></script>
-  <script defer src="/_vercel/speed-insights/script.js"></script>
 
   <style>
     * {
@@ -98,15 +120,15 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    @keyframes skShimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
+    @keyframes skPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.58; }
     }
 
     .sk-shimmer {
-      background: linear-gradient(90deg, #F3EFE9 0%, #FFFFFF 50%, #F3EFE9 100%);
-      background-size: 200% 100%;
-      animation: skShimmer 1.8s ease-in-out infinite;
+      background: #EFEBE4;
+      animation: skPulse 1.6s ease-in-out infinite;
+      will-change: opacity;
     }
 
     /* Navbar superior */
@@ -545,18 +567,13 @@
         }
       });
 
-      window.addEventListener('load', function() {
+      function registrarSW() {
         navigator.serviceWorker.register("sw.js?v=1.0.20260930121500", { scope: "./" })
           .then(function(reg) {
             console.log('[Passaí PWA] Service Worker registrado:', reg.scope);
-
-            // Aguarda 5 segundos após a carga para verificar atualizações em background
-            // Isso garante 100% de CPU e rede dedicados ao motor Flutter
             setTimeout(function() {
               reg.update();
             }, 5000);
-
-            // Ao retornar para a aba, verifica suavemente se há nova versão
             document.addEventListener('visibilitychange', function() {
               if (document.visibilityState === 'visible') {
                 reg.update();
@@ -566,8 +583,27 @@
           .catch(function(err) {
             console.warn('[Passaí PWA] Falha no registro do Service Worker:', err);
           });
-      });
+      }
+
+      // Registra o Service Worker após o primeiro frame ou em idle para liberar 100% de CPU inicial para o Flutter
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(registrarSW, { timeout: 4000 });
+      } else {
+        setTimeout(registrarSW, 2500);
+      }
     }
+
+    // ============================================================
+    // Suporte ao Back/Forward Cache (bfcache) do Navegador
+    // ============================================================
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        // Página restaurada instantaneamente do cache de navegação
+        if (typeof window.removeSplashScreen === 'function') {
+          window.removeSplashScreen();
+        }
+      }
+    });
   </script>
   <script src="flutter_bootstrap.js?v=1.0.20260930121500" async></script>
 </body>
