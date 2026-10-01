@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
 import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/domain/entities/horario.dart';
@@ -612,7 +613,7 @@ class _DesktopViagemCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    horario.duracao ?? '45 min',
+                    DuracaoEstimativa.padronizar(horario.duracao) ?? '45 min',
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
@@ -657,9 +658,9 @@ class _DesktopViagemCard extends StatelessWidget {
                     seccionamentos: rota.seccionamentos,
                   );
 
-                  final duracaoStr = horario.duracao ??
+                  final duracaoStr = DuracaoEstimativa.padronizar(horario.duracao) ??
                       (rota.distanciaKm != null
-                          ? '${(rota.distanciaKm! * 1.15).round()} min'
+                          ? DuracaoEstimativa.estimar(rota.distanciaKm) ?? 'A consultar'
                           : 'A consultar');
                   final distanciaStr = rota.distanciaKm != null
                       ? '${rota.distanciaKm} km'

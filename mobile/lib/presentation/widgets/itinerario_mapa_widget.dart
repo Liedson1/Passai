@@ -411,10 +411,10 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
     // Usa traçado OSRM quando disponível, senão os pontos diretos
     final pontosPolyline = _rotaOsrm.isNotEmpty ? _rotaOsrm : pontosBase;
 
-    // URL dos tiles CartoDB Voyager com a API Key informada
+    // URL dos tiles CartoDB Voyager (CORS aberto nativo para Web, com suporte a subdomínios a-d)
     final tileUrl = AppConstants.cartoApiKey.isNotEmpty
         ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${AppConstants.cartoApiKey}'
-        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
 
     // Reutiliza marcadores cacheados se a seleção não mudou
     if (_marcadoresCache == null || _ultimaSelecao != _paradaSelecionada) {
@@ -444,14 +444,19 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
                         horizontal: 40,
                         vertical: 36,
                       ),
+                      maxZoom: 14.5,
                     ),
                     onPositionChanged: (camera, hasGesture) {
                       // Atualiza ValueNotifier — NÃO chama setState, zero rebuild no mapa
                       _rotacaoNotifier.value = camera.rotation;
                     },
-                    // Rotação, arrastar, pinça e toque duplo totalmente liberados!
+                    // Na Web, drag/pinch/doubleTap/rotate ativos, MAS scrollWheelZoom desativado
+                    // para evitar que o mouse wheel trave o scroll vertical da página de detalhes
                     interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.all,
+                      flags: InteractiveFlag.drag |
+                          InteractiveFlag.pinchZoom |
+                          InteractiveFlag.doubleTapZoom |
+                          InteractiveFlag.rotate,
                     ),
                   ),
                   children: [
@@ -623,14 +628,14 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
         final corPino = isFirst ? AppColors.primary : AppColors.secondary;
         final corDot = isFirst ? const Color(0xFF16A34A) : AppColors.secondary;
 
-        // No flutter_map, Alignment.topCenter posiciona o fundo do widget exatamente sobre Marker.point.
+        // No flutter_map, Alignment.bottomCenter posiciona o fundo do widget (ponta do pino) sobre Marker.point.
         // O _PinoTeardropPainter desenha a ponta inferior no pixel (w/2, h), garantindo exatidão zero-offset.
         marcadores.add(
           Marker(
             point: coord,
             width: 120,
             height: 60,
-            alignment: Alignment.topCenter,
+            alignment: Alignment.bottomCenter,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _selecionarParada(parada),
@@ -805,12 +810,12 @@ class _PinoTeardropPainter extends CustomPainter {
     final h = size.height;
     final r = w / 2;
 
-    // Sombra suave sob a ponta do pino
+    // Sombra suave sob a ponta do pino (web-safe, sem shader MaskFilter)
     final shadowPaint = Paint()
       ..color = const Color(0x33000000)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+      ..style = PaintingStyle.fill;
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(w / 2, h - 1), width: 6, height: 3),
+      Rect.fromCenter(center: Offset(w / 2, h - 0.5), width: 8, height: 3),
       shadowPaint,
     );
 

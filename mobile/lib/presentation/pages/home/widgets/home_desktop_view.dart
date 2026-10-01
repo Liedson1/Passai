@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/constants/popular_routes.dart';
 import 'package:passai/core/errors/exceptions.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
 import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
@@ -474,8 +475,8 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                               );
 
                               final duracaoStr = rotaFinal.distanciaKm != null
-                                  ? '${(rotaFinal.distanciaKm! * 1.15).round()} min'
-                                  : '1h 45m';
+                                  ? DuracaoEstimativa.estimar(rotaFinal.distanciaKm) ?? '1h 45min'
+                                  : '1h 45min';
                               final distanciaStr = rotaFinal.distanciaKm != null
                                   ? '${rotaFinal.distanciaKm} km'
                                   : '85 km';

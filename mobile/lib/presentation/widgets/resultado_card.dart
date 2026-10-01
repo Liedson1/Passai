@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
 import 'package:passai/domain/entities/horario.dart';
 
 /// Card individual de resultado na tela de resultados de horários.
@@ -108,7 +109,7 @@ class ResultadoCard extends StatelessWidget {
                     // Duração
                     if (horario.duracao != null)
                       Text(
-                        horario.duracao!,
+                        DuracaoEstimativa.padronizar(horario.duracao) ?? horario.duracao!,
                         style: AppTextStyles.bodyRegular(
                           fontSize: 13,
                           color: AppColors.textSecondary,

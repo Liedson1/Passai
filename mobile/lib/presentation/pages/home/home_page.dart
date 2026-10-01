@@ -6,6 +6,7 @@ import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/constants/popular_routes.dart';
 import 'package:passai/core/errors/exceptions.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
 import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
@@ -912,8 +913,8 @@ class _RotasPopularesSection extends ConsumerWidget {
                     );
 
                     final duracaoStr = rota.distanciaKm != null
-                        ? '${(rota.distanciaKm! * 1.15).round()} min'
-                        : '1h 45m';
+                        ? DuracaoEstimativa.estimar(rota.distanciaKm) ?? '1h 45min'
+                        : '1h 45min';
                     final distanciaStr = rota.distanciaKm != null
                         ? '${rota.distanciaKm} km'
                         : '85 km';

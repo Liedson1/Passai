@@ -82,6 +82,7 @@ class HorarioModel {
       preco ??= (rotaMap['tarifa'] as num?)?.toDouble();
       final dist = (rotaMap['distancia_km'] as num?)?.toInt();
       duracao ??= DuracaoEstimativa.estimar(dist);
+      duracao = DuracaoEstimativa.padronizar(duracao);
       final secc = rotaMap['seccionamentos'] as String?;
       if (secc != null && secc.trim().isNotEmpty) {
         paradas ??= 'Com paradas';

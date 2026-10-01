@@ -11,9 +11,10 @@ void main() {
       expect(DuracaoEstimativa.estimar(null), isNull);
     });
 
-    test('Retorna formato em minutos quando duracao for menor que 60 min', () {
-      expect(DuracaoEstimativa.estimar(45), '45 min');
+    test('Retorna formato em minutos quando duracao for menor ou igual a 59 min', () {
       expect(DuracaoEstimativa.estimar(15), '15 min');
+      expect(DuracaoEstimativa.estimar(45), '45 min');
+      expect(DuracaoEstimativa.estimar(59), '59 min');
     });
 
     test('Retorna formato horas exatas quando duracao for multiplo de 60', () {
@@ -21,9 +22,22 @@ void main() {
       expect(DuracaoEstimativa.estimar(120), '2h');
     });
 
-    test('Retorna formato horas e minutos quando duracao exceder 60 min', () {
+    test('Retorna formato horas e minutos quando duracao exceder 59 min', () {
+      expect(DuracaoEstimativa.estimar(61), '1h 1min');
       expect(DuracaoEstimativa.estimar(90), '1h 30min');
       expect(DuracaoEstimativa.estimar(125), '2h 5min');
+    });
+
+    test('DuracaoEstimativa.padronizar converte strings com minutos acima de 59 para horas', () {
+      expect(DuracaoEstimativa.padronizar('45 min'), '45 min');
+      expect(DuracaoEstimativa.padronizar('59 min'), '59 min');
+      expect(DuracaoEstimativa.padronizar('60 min'), '1h');
+      expect(DuracaoEstimativa.padronizar('74 min'), '1h 14min');
+      expect(DuracaoEstimativa.padronizar('85min'), '1h 25min');
+      expect(DuracaoEstimativa.padronizar('1h 45m'), '1h 45min');
+      expect(DuracaoEstimativa.padronizar('2h'), '2h');
+      expect(DuracaoEstimativa.padronizar('A consultar'), 'A consultar');
+      expect(DuracaoEstimativa.padronizar(null), isNull);
     });
   });
 

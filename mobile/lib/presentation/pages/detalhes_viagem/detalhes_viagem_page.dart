@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/parada_itinerario.dart';
 import 'package:passai/presentation/providers/paradas_provider.dart';
@@ -628,7 +629,7 @@ class _RouteSummaryCard extends StatelessWidget {
                 child: _MetricaItem(
                   icon: Icons.hourglass_empty_rounded,
                   label: 'Duração',
-                  valor: detalhes.duracao ?? '1h 45m',
+                  valor: DuracaoEstimativa.padronizar(detalhes.duracao) ?? '1h 45min',
                 ),
               ),
               const SizedBox(width: 8),

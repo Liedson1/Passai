@@ -83,7 +83,7 @@ void main() {
         find.text("Delmiro Gouveia x Piranhas (via Olho d'Água)"),
         findsOneWidget,
       );
-      expect(find.text('1h 10m'), findsOneWidget);
+      expect(find.text('1h 10min'), findsOneWidget);
       expect(find.text('4 paradas'), findsOneWidget);
     });
 
