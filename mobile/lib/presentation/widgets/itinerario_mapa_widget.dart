@@ -423,6 +423,11 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
         _paradaSelecionada = null;
       } else {
         _paradaSelecionada = parada;
+        final coord = _resolverCoordenada(parada);
+        if (coord != null) {
+          // Centraliza a câmera diretamente no ponto selecionado com zoom nítido e equilibrado
+          _mapController.move(coord, 14.5);
+        }
       }
       _marcadoresCache = null; // Invalida cache ao mudar seleção
     });
@@ -485,6 +490,9 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
                       ),
                       maxZoom: 14.5,
                     ),
+                    minZoom: 6.0,
+                    // Teto de zoom calibrado para máxima nitidez: evita interpolação/embaçamento
+                    maxZoom: 17.5,
                     onPositionChanged: (camera, hasGesture) {
                       // Atualiza ValueNotifier — NÃO chama setState, zero rebuild no mapa
                       _rotacaoNotifier.value = camera.rotation;
@@ -502,7 +510,8 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
                           ? const ['a', 'b', 'c', 'd']
                           : const ['a', 'b', 'c'],
                       userAgentPackageName: 'app.passai.alagoas',
-                      maxZoom: 19,
+                      maxNativeZoom: 18,
+                      maxZoom: 18.0,
                       keepBuffer: 5,
                       panBuffer: 1,
                     ),
@@ -545,14 +554,14 @@ class _ItinerarioMapaWidgetState extends State<ItinerarioMapaWidget> {
                       final currentZoom = _mapController.camera.zoom;
                       _mapController.move(
                         _mapController.camera.center,
-                        (currentZoom + 1).clamp(1.0, 19.0),
+                        (currentZoom + 1).clamp(6.0, 17.5),
                       );
                     },
                     onZoomOut: () {
                       final currentZoom = _mapController.camera.zoom;
                       _mapController.move(
                         _mapController.camera.center,
-                        (currentZoom - 1).clamp(1.0, 19.0),
+                        (currentZoom - 1).clamp(6.0, 17.5),
                       );
                     },
                     onResetBounds: () {
