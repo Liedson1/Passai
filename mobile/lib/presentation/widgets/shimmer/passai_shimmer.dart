@@ -1,0 +1,111 @@
+import 'package:flutter/material.dart';
+import 'package:passai/core/theme/app_colors.dart';
+import 'package:passai/core/constants/app_constants.dart';
+
+/// Widget de shimmer/skeleton reutilizável para estados de carregamento.
+/// Usa animação de opacidade pulsante (sem dependência externa).
+class PassaiShimmer extends StatefulWidget {
+  const PassaiShimmer({
+    super.key,
+    required this.width,
+    required this.height,
+    this.borderRadius = 10,
+  });
+
+  final double width;
+  final double height;
+  final double borderRadius;
+
+  @override
+  State<PassaiShimmer> createState() => _PassaiShimmerState();
+}
+
+class _PassaiShimmerState extends State<PassaiShimmer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: Container(
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: const Color(0xFFEFEBE4),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
+        ),
+      ),
+    );
+  }
+}
+
+/// Skeleton de um card de rota popular — replica a estrutura do [PopularRouteCard]
+class PopularRouteCardSkeleton extends StatelessWidget {
+  const PopularRouteCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Linha Origem → Destino
+                    const PassaiShimmer(width: double.infinity, height: 16, borderRadius: 6),
+                    const SizedBox(height: 8),
+                    // Subtítulo
+                    PassaiShimmer(width: 180, height: 11, borderRadius: 4),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Badge preço
+              const PassaiShimmer(width: 64, height: 28, borderRadius: 8),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Botões de ação
+          Row(
+            children: [
+              Expanded(child: PassaiShimmer(width: double.infinity, height: 34, borderRadius: 8)),
+              const SizedBox(width: 8),
+              Expanded(child: PassaiShimmer(width: double.infinity, height: 34, borderRadius: 8)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

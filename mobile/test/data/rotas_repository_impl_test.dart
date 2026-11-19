@@ -24,6 +24,15 @@ class FakeRotasRemoteDatasource extends RotasRemoteDatasource {
         tarifa: 50.0,
         diasOperacao: 'Segunda a Domingo',
       ),
+      const RotaModel(
+        id: 2,
+        linha: 'Linha 2',
+        origem: 'Água Branca',
+        destino: 'Piranhas',
+        distanciaKm: 45,
+        tarifa: 12.0,
+        diasOperacao: 'Segunda a Sábado',
+      ),
     ];
   }
 
@@ -76,30 +85,50 @@ void main() {
       repository = RotasRepositoryImpl(datasource);
     });
 
-    test('buscarTodasAsRotas converte models para entidades de dominio', () async {
+    test('buscarTodasAsRotas converte models para entidades de dominio e usa cache', () async {
       final rotas = await repository.buscarTodasAsRotas();
-      expect(rotas.length, 1);
+      expect(rotas.length, 2);
       expect(rotas.first.origem, 'Delmiro Gouveia');
       expect(rotas.first.destino, 'Maceió');
       expect(datasource.fetchTodasAsRotasCalls, 1);
+
+      // Segunda chamada deve usar cache em memória
+      final rotas2 = await repository.buscarTodasAsRotas();
+      expect(rotas2.length, 2);
+      expect(datasource.fetchTodasAsRotasCalls, 1);
     });
 
-    test('buscarCidades usa cache local para chamadas subsequentes e filtra por termo', () async {
-      // Primeira chamada: busca do datasource
+    test('buscarCidades aproveita cache de rotas para eliminar queries redundantes', () async {
+      // Primeira chamada: busca rotas e extrai cidades
       final todas = await repository.buscarCidades();
       expect(todas.length, 4);
-      expect(datasource.fetchCidadesCalls, 1);
+      expect(todas, ['Delmiro Gouveia', 'Maceió', 'Piranhas', 'Água Branca']);
+      expect(datasource.fetchTodasAsRotasCalls, 1);
 
       // Segunda chamada com termo: deve usar o cache e filtrar com TextNormalizer
       final filtradas = await repository.buscarCidades(termo: 'delmiro');
       expect(filtradas, ['Delmiro Gouveia']);
-      // Não deve ter chamado o datasource novamente
-      expect(datasource.fetchCidadesCalls, 1);
+      expect(datasource.fetchTodasAsRotasCalls, 1);
 
       // Terceira chamada com acento normalizado:
       final comAcento = await repository.buscarCidades(termo: 'agua');
       expect(comAcento, ['Água Branca']);
-      expect(datasource.fetchCidadesCalls, 1);
+      expect(datasource.fetchTodasAsRotasCalls, 1);
+
+      // buscarTodasAsRotas não deve disparar query extra pois já está em cache
+      final rotas = await repository.buscarTodasAsRotas();
+      expect(rotas.length, 2);
+      expect(datasource.fetchTodasAsRotasCalls, 1);
+    });
+
+    test('limparCache invalida o cache forçando nova consulta', () async {
+      await repository.buscarTodasAsRotas();
+      expect(datasource.fetchTodasAsRotasCalls, 1);
+
+      repository.limparCache();
+
+      await repository.buscarTodasAsRotas();
+      expect(datasource.fetchTodasAsRotasCalls, 2);
     });
 
     test('buscarHorarios mapeia Sentido enum para string do banco e retorna entidades', () async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:passai/core/theme/app_colors.dart';
+import 'package:passai/data/repositories/rotas_repository_impl.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/responsive_shell.dart';
 import 'widgets/home_body_content.dart';
@@ -32,13 +33,15 @@ class HomePage extends ConsumerWidget {
             color: AppColors.primary,
             onRefresh: () async {
               HapticFeedback.lightImpact();
-              ref.invalidate(cidadesProvider);
+              // Limpa o cache do repositório para forçar nova consulta ao banco
+              final repo = ref.read(rotasRepositoryProvider);
+              if (repo is RotasRepositoryImpl) {
+                repo.limparCache();
+              }
               ref.invalidate(todasAsRotasProvider);
+              ref.invalidate(cidadesProvider);
               try {
-                await Future.wait([
-                  ref.read(cidadesProvider.future),
-                  ref.read(todasAsRotasProvider.future),
-                ]);
+                await ref.read(todasAsRotasProvider.future);
               } catch (_) {}
             },
             child: CustomScrollView(

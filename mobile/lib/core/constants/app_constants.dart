@@ -39,6 +39,5 @@ class AppRoutes {
   static const String horarios = '/horarios';
   static const String resultados = '/resultados';
   static const String detalhesViagem = '/detalhes-viagem';
-  static const String signIn = '/sign-in';
-  static const String signUp = '/sign-up';
 }
+

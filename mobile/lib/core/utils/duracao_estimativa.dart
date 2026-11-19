@@ -65,4 +65,37 @@ class DuracaoEstimativa {
 
     return trimmed;
   }
+
+  /// Extrai a quantidade total de minutos a partir de uma string de duração (ex: "1h 30min", "45 min", "90").
+  /// Retorna [fallback] se a string for nula, vazia ou inválida.
+  static int extrairMinutos(String? duracaoStr, {int fallback = 60}) {
+    if (duracaoStr == null || duracaoStr.trim().isEmpty) return fallback;
+    final trimmed = duracaoStr.trim();
+    final regex = RegExp(
+      r'^(?:(\d+)\s*h(?:oras?)?)?\s*(?:(\d+)\s*m(?:in(?:utos?)?)?)?$',
+      caseSensitive: false,
+    );
+    final match = regex.firstMatch(trimmed);
+    if (match != null) {
+      final horas = int.tryParse(match.group(1) ?? '') ?? 0;
+      final mins = int.tryParse(match.group(2) ?? '') ?? 0;
+      final totalMinutos = horas * 60 + mins;
+      if (totalMinutos > 0) return totalMinutos;
+    }
+
+    final apenasNumero = int.tryParse(trimmed);
+    if (apenasNumero != null && apenasNumero > 0) {
+      return apenasNumero;
+    }
+
+    // Se contiver indicação de "min" avulsa (ex: "45min")
+    if (trimmed.contains('min')) {
+      final mStr = trimmed.replaceAll(RegExp(r'[^\d]'), '').trim();
+      final parsed = int.tryParse(mStr);
+      if (parsed != null && parsed > 0) return parsed;
+    }
+
+    return fallback;
+  }
 }
+

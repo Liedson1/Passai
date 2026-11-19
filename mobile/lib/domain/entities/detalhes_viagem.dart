@@ -1,4 +1,5 @@
-import 'parada_itinerario.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
+import 'package:passai/domain/entities/parada_itinerario.dart';
 
 /// Entidade de domínio: Detalhes completos de uma viagem específica.
 /// Contém as informações exibidas na tela de Detalhes da Viagem,
@@ -202,6 +203,12 @@ class DetalhesViagem {
         data['motivo'] as String? ??
         data['alteracaoMotivo'] as String?;
 
+    final rawDuracao = data['duracao'] as String? ??
+        rotaMap?['duracao'] as String? ??
+        horarioMap?['duracao'] as String?;
+    final duracaoPadronizada = DuracaoEstimativa.padronizar(rawDuracao) ??
+        DuracaoEstimativa.estimar(distNum?.toInt());
+
     // 4. Tabela paradas_rota
     final rawParadas = (data['paradas'] as List?) ?? (data['itinerario'] as List?) ?? const [];
     final itinerarioList = rawParadas
@@ -217,6 +224,7 @@ class DetalhesViagem {
       origem: origemStr,
       destino: destinoStr,
       horaSaida: horaEfetiva,
+      duracao: duracaoPadronizada,
       distancia: distanciaStr,
       diasOperacao: diasOperacaoStr,
       seccionamentos: seccionamentosStr,
@@ -232,6 +240,7 @@ class DetalhesViagem {
       aviso: data['aviso'] as String?,
     );
   }
+
 
   /// Converte a entidade para Map JSON alinhado com o banco
   Map<String, dynamic> toJson() => {

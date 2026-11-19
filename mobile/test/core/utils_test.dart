@@ -39,7 +39,18 @@ void main() {
       expect(DuracaoEstimativa.padronizar('A consultar'), 'A consultar');
       expect(DuracaoEstimativa.padronizar(null), isNull);
     });
+
+    test('DuracaoEstimativa.extrairMinutos extrai total de minutos com precisao e fallback', () {
+      expect(DuracaoEstimativa.extrairMinutos('45 min'), 45);
+      expect(DuracaoEstimativa.extrairMinutos('1h 30min'), 90);
+      expect(DuracaoEstimativa.extrairMinutos('2h'), 120);
+      expect(DuracaoEstimativa.extrairMinutos('75'), 75);
+      expect(DuracaoEstimativa.extrairMinutos('85min'), 85);
+      expect(DuracaoEstimativa.extrairMinutos(null, fallback: 60), 60);
+      expect(DuracaoEstimativa.extrairMinutos('invalido', fallback: 70), 70);
+    });
   });
+
 
   group('TextNormalizer Tests', () {
     test('Remove acentos e caracteres especiais', () {
@@ -146,5 +157,35 @@ void main() {
       expect(itinerario[3].parada, "Olho d'Água das Flores");
       expect(itinerario[3].tipo, 'destino');
     });
+
+    test('enriquecerItinerario calcula horarios intermediarios e tags de embarque corretamente', () {
+      final base = ItinerarioHelper.criarItinerarioFallback(
+        origem: 'Arapiraca',
+        destino: "Olho d'Água das Flores",
+        rotaId: 54,
+        horarioSaida: '06:00',
+      );
+
+      final enriquecido = ItinerarioHelper.enriquecerItinerario(
+        paradas: base,
+        horaSaida: '06:00',
+        duracaoStr: '1h 30min',
+        chegadaPrevista: '07:30',
+      );
+
+      expect(enriquecido.length, 4);
+      expect(enriquecido[0].horario, '06:00');
+      expect(enriquecido[0].tipo, 'origem');
+      expect(enriquecido[0].tags, contains('Embarque'));
+
+      expect(enriquecido[3].horario, '07:30');
+      expect(enriquecido[3].tipo, 'destino');
+      expect(enriquecido[3].tags, contains('Desembarque final'));
+
+      // Intermediárias com horário preenchido entre 06:00 e 07:30
+      expect(enriquecido[1].horario.isNotEmpty, isTrue);
+      expect(enriquecido[2].horario.isNotEmpty, isTrue);
+    });
   });
 }
+

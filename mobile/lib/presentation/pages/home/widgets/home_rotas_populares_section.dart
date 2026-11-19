@@ -14,6 +14,7 @@ import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.d
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/popular_route_card.dart';
+import 'package:passai/presentation/widgets/shimmer/passai_shimmer.dart';
 
 /// Seção de rotas populares em destaque na HomePage
 class HomeRotasPopularesSection extends ConsumerWidget {
@@ -21,7 +22,7 @@ class HomeRotasPopularesSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todasRotas = ref.watch(todasAsRotasProvider).valueOrNull ?? [];
+    final todasRotasAsync = ref.watch(todasAsRotasProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,79 +44,93 @@ class HomeRotasPopularesSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        Column(
-          children: [
-            for (int index = 0; index < rotasPopularesDestaque.length; index++) ...[
-              if (index > 0) const SizedBox(height: 10),
-              () {
-                final config = rotasPopularesDestaque[index];
 
-                // Procura a rota no banco de dados tanto na ida quanto na volta
-                Rota rota;
-                Sentido sentido;
+        // Estado de carregamento: exibe skeletons enquanto o banco responde
+        if (todasRotasAsync.isLoading)
+          Column(
+            children: List.generate(
+              3,
+              (i) => Padding(
+                padding: EdgeInsets.only(top: i > 0 ? 10 : 0),
+                child: const PopularRouteCardSkeleton(),
+              ),
+            ),
+          )
+        else
+          Column(
+            children: [
+              for (int index = 0; index < rotasPopularesDestaque.length; index++) ...[
+                if (index > 0) const SizedBox(height: 10),
+                () {
+                  final config = rotasPopularesDestaque[index];
+                  final todasRotas = todasRotasAsync.valueOrNull ?? [];
 
-                final rotaDireta = todasRotas.where((r) {
-                  return r.origem.toLowerCase().contains(config.origem.toLowerCase()) &&
-                      r.destino.toLowerCase().contains(config.destino.toLowerCase());
-                }).firstOrNull;
+                  // Procura a rota no banco de dados tanto na ida quanto na volta
+                  Rota rota;
+                  Sentido sentido;
 
-                if (rotaDireta != null) {
-                  rota = rotaDireta;
-                  sentido = Sentido.ida;
-                } else {
-                  final rotaReversa = todasRotas.where((r) {
-                    return r.origem.toLowerCase().contains(config.destino.toLowerCase()) &&
-                        r.destino.toLowerCase().contains(config.origem.toLowerCase());
+                  final rotaDireta = todasRotas.where((r) {
+                    return r.origem.toLowerCase().contains(config.origem.toLowerCase()) &&
+                        r.destino.toLowerCase().contains(config.destino.toLowerCase());
                   }).firstOrNull;
 
-                  if (rotaReversa != null) {
-                    rota = rotaReversa;
-                    sentido = Sentido.volta;
-                  } else {
-                    rota = Rota(
-                      id: config.fallbackId,
-                      linha: '${config.origem} - ${config.destino}',
-                      origem: config.origem,
-                      destino: config.destino,
-                      diasOperacao: 'Diariamente',
-                      tarifa: config.precoPadrao,
-                    );
+                  if (rotaDireta != null) {
+                    rota = rotaDireta;
                     sentido = Sentido.ida;
+                  } else {
+                    final rotaReversa = todasRotas.where((r) {
+                      return r.origem.toLowerCase().contains(config.destino.toLowerCase()) &&
+                          r.destino.toLowerCase().contains(config.origem.toLowerCase());
+                    }).firstOrNull;
+
+                    if (rotaReversa != null) {
+                      rota = rotaReversa;
+                      sentido = Sentido.volta;
+                    } else {
+                      rota = Rota(
+                        id: config.fallbackId,
+                        linha: '${config.origem} - ${config.destino}',
+                        origem: config.origem,
+                        destino: config.destino,
+                        diasOperacao: 'Diariamente',
+                        tarifa: config.precoPadrao,
+                      );
+                      sentido = Sentido.ida;
+                    }
                   }
-                }
 
-                final tarifa = rota.tarifa ?? config.precoPadrao;
-                final precoStr = 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}';
+                  final tarifa = rota.tarifa ?? config.precoPadrao;
+                  final precoStr = 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}';
 
-                return PopularRouteCard(
-                  key: ValueKey('${config.origem}-${config.destino}'),
-                  route: PopularRoute(
-                    from: config.origem,
-                    to: config.destino,
-                    via: config.via,
-                    nextTime: config.horarioSaida,
-                    price: precoStr,
-                    subtitle: config.descricao,
-                  ),
-                  onTap: () => context.push(
-                    '${AppRoutes.resultados}?origem=${Uri.encodeComponent(config.origem)}&destino=${Uri.encodeComponent(config.destino)}&sentido=${sentido.name}',
-                    extra: ResultadosArgs(
+                  return PopularRouteCard(
+                    key: ValueKey('${config.origem}-${config.destino}'),
+                    route: PopularRoute(
+                      from: config.origem,
+                      to: config.destino,
+                      via: config.via,
+                      nextTime: config.horarioSaida,
+                      price: precoStr,
+                      subtitle: config.descricao,
+                    ),
+                    onTap: () => context.push(
+                      '${AppRoutes.resultados}?origem=${Uri.encodeComponent(config.origem)}&destino=${Uri.encodeComponent(config.destino)}&sentido=${sentido.name}',
+                      extra: ResultadosArgs(
+                        rota: rota,
+                        sentido: sentido,
+                      ),
+                    ),
+                    onVerDetalhes: () => _navegarParaDetalhes(
+                      context: context,
+                      config: config,
                       rota: rota,
                       sentido: sentido,
+                      precoStr: precoStr,
                     ),
-                  ),
-                  onVerDetalhes: () => _navegarParaDetalhes(
-                    context: context,
-                    config: config,
-                    rota: rota,
-                    sentido: sentido,
-                    precoStr: precoStr,
-                  ),
-                );
-              }(),
+                  );
+                }(),
+              ],
             ],
-          ],
-        ),
+          ),
       ],
     );
   }

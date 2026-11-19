@@ -1,4 +1,5 @@
 import 'package:passai/core/constants/coordenadas_cidades.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
 import 'package:passai/core/utils/text_normalizer.dart';
 import 'package:passai/domain/entities/parada_itinerario.dart';
 
@@ -108,4 +109,92 @@ class ItinerarioHelper {
 
     return resultado;
   }
+
+  /// Enriquece a lista de paradas com horários proporcionais estimados,
+  /// descrições de pontos e tags de embarque/desembarque.
+  static List<ParadaItinerario> enriquecerItinerario({
+    required List<ParadaItinerario> paradas,
+    required String? horaSaida,
+    required String? duracaoStr,
+    required String? chegadaPrevista,
+    String? origemFallback,
+    String? destinoFallback,
+  }) {
+    if (paradas.isEmpty) return const [];
+
+    final total = paradas.length;
+    final saidaStr = horaSaida ?? (paradas.isNotEmpty ? paradas.first.horario : '06:00');
+
+    int saidaMinutos = 360;
+    final parts = saidaStr.split(':');
+    if (parts.length >= 2) {
+      final h = int.tryParse(parts[0]) ?? 6;
+      final m = int.tryParse(parts[1]) ?? 0;
+      saidaMinutos = h * 60 + m;
+    }
+
+    final duracaoMinutos = DuracaoEstimativa.extrairMinutos(duracaoStr, fallback: 60);
+    final resultado = <ParadaItinerario>[];
+
+    for (int i = 0; i < total; i++) {
+      final item = paradas[i];
+      final isFirst = i == 0;
+      final isLast = i == total - 1;
+
+      String horaCalculada;
+      String tipo;
+      String? ponto;
+      List<String> tags = [];
+      String? observacao;
+
+      if (isFirst) {
+        tipo = 'origem';
+        horaCalculada = saidaStr;
+        ponto = item.descricao != null && item.descricao!.isNotEmpty
+            ? item.descricao
+            : 'Terminal Rodoviário • Ponto de Partida';
+        tags = const ['Ponto de Partida', 'Embarque'];
+      } else if (isLast) {
+        tipo = 'destino';
+        if (chegadaPrevista != null && chegadaPrevista.isNotEmpty) {
+          horaCalculada = chegadaPrevista;
+        } else {
+          final totalChegada = (saidaMinutos + duracaoMinutos) % 1440;
+          final h = (totalChegada ~/ 60).toString().padLeft(2, '0');
+          final m = (totalChegada % 60).toString().padLeft(2, '0');
+          horaCalculada = '$h:$m';
+        }
+        ponto = item.descricao != null && item.descricao!.isNotEmpty
+            ? item.descricao
+            : 'Terminal Central • Ponto de Chegada';
+        tags = const ['Ponto de Chegada', 'Desembarque final'];
+      } else {
+        tipo = 'intermediaria';
+        final fracao = i / (total - 1);
+        final estimativaMin = saidaMinutos + (duracaoMinutos * fracao).round();
+        final arredondado = ((estimativaMin + 2) ~/ 5) * 5;
+        final h = ((arredondado ~/ 60) % 24).toString().padLeft(2, '0');
+        final m = (arredondado % 60).toString().padLeft(2, '0');
+        horaCalculada = '$h:$m';
+
+        ponto = item.descricao != null && item.descricao!.isNotEmpty
+            ? item.descricao
+            : (item.parada.isNotEmpty ? item.parada : 'Parada intermediária');
+        observacao = item.observacao ?? 'Embarque e desembarque rápido';
+      }
+
+      resultado.add(
+        item.copyWith(
+          horario: horaCalculada,
+          tipo: tipo,
+          descricao: ponto,
+          tags: tags,
+          observacao: observacao,
+        ),
+      );
+    }
+
+    return resultado;
+  }
 }
+
