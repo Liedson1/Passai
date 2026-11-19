@@ -47,13 +47,11 @@ class _DesktopRouteCardState extends State<DesktopRouteCard> {
               color: _isHovered ? AppColors.primary : AppColors.border,
               width: _isHovered ? 1.5 : 1,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: _isHovered
-                    ? AppColors.primary.withValues(alpha: 0.08)
-                    : Colors.black.withValues(alpha: 0.02),
-                blurRadius: _isHovered ? 12 : 4,
-                offset: const Offset(0, 4),
+                color: Color(0x0A000000),
+                blurRadius: 6,
+                offset: Offset(0, 2),
               ),
             ],
           ),

@@ -46,7 +46,9 @@ class HomePage extends ConsumerWidget {
             },
             child: CustomScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
               slivers: [
                 const SliverToBoxAdapter(
                   child: HomeHeroBanner(),
