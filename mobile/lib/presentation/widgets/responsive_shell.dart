@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:passai/core/theme/app_colors.dart';
 
 /// Envelopa telas em um container centralizado com largura máxima controlada
-/// em monitores desktop ou tablets (> 580px), prevenindo inputs e cards
+/// em monitores desktop ou tablets (> 640px), prevenindo inputs e cards
 /// desconfortavelmente esticados e mantendo foco e ergonomia visual.
 class ResponsiveShell extends StatelessWidget {
   const ResponsiveShell({
     super.key,
     required this.child,
-    this.maxWidth = 580.0,
+    this.maxWidth = 640.0,
     this.backgroundColor,
   });
 

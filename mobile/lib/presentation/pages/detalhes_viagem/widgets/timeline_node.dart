@@ -120,11 +120,13 @@ class TimelineNode extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            isFirst || isLast
+                            isFirst
                                 ? parada.horario
-                                : '~ ${parada.horario}',
+                                : (isLast
+                                    ? '${parada.horario} (chegada)'
+                                    : '${parada.horario} (previsto)'),
                             style: AppTextStyles.bodyBold(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: isFirst
                                   ? AppColors.primary
                                   : (isLast

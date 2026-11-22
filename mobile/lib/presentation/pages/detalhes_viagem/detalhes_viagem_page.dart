@@ -80,7 +80,7 @@ class DetalhesViagemPage extends ConsumerWidget {
           body: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              DetalhesAppBar(detalhes: detalhes),
+              DetalhesAppBar(detalhes: detalhes, args: args),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(
                   20,

@@ -93,19 +93,51 @@ class SecaoItinerario extends StatelessWidget {
             )
           else
             Column(
-              children: List.generate(itinerario.length, (index) {
-                final parada = itinerario[index];
-                final isFirst = index == 0 || parada.tipo == 'origem';
-                final isLast =
-                    index == itinerario.length - 1 || parada.tipo == 'destino';
+              children: [
+                ...List.generate(itinerario.length, (index) {
+                  final parada = itinerario[index];
+                  final isFirst = index == 0 || parada.tipo == 'origem';
+                  final isLast =
+                      index == itinerario.length - 1 || parada.tipo == 'destino';
 
-                return TimelineNode(
-                  parada: parada,
-                  isFirst: isFirst,
-                  isLast: isLast,
-                  ordem: index + 1,
-                );
-              }),
+                  return TimelineNode(
+                    parada: parada,
+                    isFirst: isFirst,
+                    isLast: isLast,
+                    ordem: index + 1,
+                  );
+                }),
+                if (itinerario.length > 2) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Horários das paradas intermediárias são estimativas sujeitas ao trânsito e embarque.',
+                            style: AppTextStyles.bodyRegular(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
         ],
       ),

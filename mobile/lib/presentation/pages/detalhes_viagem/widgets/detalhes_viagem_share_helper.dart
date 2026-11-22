@@ -7,7 +7,12 @@ import 'package:passai/domain/entities/detalhes_viagem.dart';
 class DetalhesViagemShareHelper {
   DetalhesViagemShareHelper._();
 
-  static void compartilhar(BuildContext context, DetalhesViagem detalhes) {
+  static void compartilhar(
+    BuildContext context,
+    DetalhesViagem detalhes, {
+    int? rotaId,
+    String? sentido,
+  }) {
     final buffer = StringBuffer();
     buffer.writeln('🚐 *Passaí — Detalhes da Viagem*');
     buffer.writeln('Linha: ${detalhes.rota}');
@@ -28,7 +33,18 @@ class DetalhesViagemShareHelper {
       );
     }
     buffer.writeln('\nConsulte horários e itinerários no Passaí:');
-    buffer.writeln('https://passai-al.vercel.app');
+
+    final effectiveRotaId = rotaId ?? int.tryParse(detalhes.codigo);
+    if (effectiveRotaId != null && sentido != null && sentido.isNotEmpty) {
+      final horaParam = detalhes.horaSaida != null && detalhes.horaSaida!.isNotEmpty
+          ? '&hora=${Uri.encodeComponent(detalhes.horaSaida!)}'
+          : '';
+      buffer.writeln(
+        'https://passai-al.vercel.app/detalhes-viagem?rotaId=$effectiveRotaId&sentido=${Uri.encodeComponent(sentido)}$horaParam',
+      );
+    } else {
+      buffer.writeln('https://passai-al.vercel.app');
+    }
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
 

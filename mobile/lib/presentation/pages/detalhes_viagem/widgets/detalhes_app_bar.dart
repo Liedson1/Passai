@@ -5,13 +5,15 @@ import 'package:passai/core/constants/app_constants.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/domain/entities/detalhes_viagem.dart';
+import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/detalhes_viagem/widgets/detalhes_viagem_share_helper.dart';
 
 /// AppBar deslizante no topo da tela de detalhes da viagem
 class DetalhesAppBar extends StatelessWidget {
-  const DetalhesAppBar({super.key, required this.detalhes});
+  const DetalhesAppBar({super.key, required this.detalhes, this.args});
 
   final DetalhesViagem detalhes;
+  final DetalhesViagemArgs? args;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +44,12 @@ class DetalhesAppBar extends StatelessWidget {
           tooltip: 'Compartilhar viagem',
           onPressed: () {
             HapticFeedback.lightImpact();
-            DetalhesViagemShareHelper.compartilhar(context, detalhes);
+            DetalhesViagemShareHelper.compartilhar(
+              context,
+              detalhes,
+              rotaId: args?.rotaId,
+              sentido: args?.sentido,
+            );
           },
         ),
       ],

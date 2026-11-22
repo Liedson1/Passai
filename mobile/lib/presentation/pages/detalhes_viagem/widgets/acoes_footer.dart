@@ -27,7 +27,12 @@ class AcoesFooter extends StatelessWidget {
           width: double.infinity,
           height: 50,
           child: ElevatedButton.icon(
-            onPressed: () => DetalhesViagemShareHelper.compartilhar(context, detalhes),
+            onPressed: () => DetalhesViagemShareHelper.compartilhar(
+              context,
+              detalhes,
+              rotaId: args?.rotaId,
+              sentido: args?.sentido,
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,

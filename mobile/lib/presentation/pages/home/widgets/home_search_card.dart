@@ -337,6 +337,7 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
     super.initState();
     _controller = TextEditingController(text: widget.valorInicial ?? '');
     _focusNode = FocusNode();
+    _focusNode.addListener(_aoMudarFoco);
   }
 
   @override
@@ -350,9 +351,49 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
 
   @override
   void dispose() {
+    _focusNode.removeListener(_aoMudarFoco);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _aoMudarFoco() {
+    if (!_focusNode.hasFocus) {
+      _confirmarSelecao();
+    }
+  }
+
+  String? _encontrarMelhorMatch(String texto, List<String> todas) {
+    final tNorm = _removerAcentos(texto);
+    if (tNorm.isEmpty) return null;
+
+    // 1. Correspondência exata
+    for (final c in todas) {
+      if (_removerAcentos(c) == tNorm) return c;
+    }
+    // 2. Prefixo (ex: "Delmiro" -> "Delmiro Gouveia")
+    for (final c in todas) {
+      if (_removerAcentos(c).startsWith(tNorm)) return c;
+    }
+    // 3. Substring (ex: "Branca" -> "Água Branca")
+    for (final c in todas) {
+      if (_removerAcentos(c).contains(tNorm)) return c;
+    }
+    return null;
+  }
+
+  void _confirmarSelecao() {
+    final trimmed = _controller.text.trim();
+    if (trimmed.isEmpty) return;
+
+    final todas = ref.read(cidadesProvider).valueOrNull ?? widget.cidades;
+    final match = _encontrarMelhorMatch(trimmed, todas);
+    if (match != null) {
+      if (_controller.text != match) {
+        _controller.text = match;
+      }
+      widget.onSelecionada(match);
+    }
   }
 
   static String _removerAcentos(String str) {
@@ -424,18 +465,8 @@ class _CidadeAutocompleteState extends ConsumerState<_CidadeAutocomplete> {
                       controller: controller,
                       focusNode: focusNode,
                       onSubmitted: (_) {
-                        final trimmed = controller.text.trim();
-                        if (trimmed.isNotEmpty) {
-                          final todas = ref.read(cidadesProvider).valueOrNull ?? widget.cidades;
-                          final tNorm = _removerAcentos(trimmed);
-                          final match = todas.firstWhere(
-                            (c) => _removerAcentos(c) == tNorm,
-                            orElse: () => trimmed,
-                          );
-                          controller.text = match;
-                          widget.onSelecionada(match);
-                          focusNode.unfocus();
-                        }
+                        _confirmarSelecao();
+                        focusNode.unfocus();
                         onSubmitted();
                       },
                       onChanged: (text) {
