@@ -10,37 +10,22 @@ import 'home_search_card.dart';
 import 'why_passai_section.dart';
 
 /// Corpo principal da HomePage mobile — orquestra os sub-widgets de conteúdo
-class HomeBodyContent extends ConsumerWidget {
+class HomeBodyContent extends StatelessWidget {
   const HomeBodyContent({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final rotasAsync = ref.watch(todasAsRotasProvider);
-    final cidadesAsync = ref.watch(cidadesProvider);
-
-    final isOffline = (rotasAsync.hasError && cidadesAsync.hasError) ||
-        (rotasAsync.error is NetworkException ||
-            cidadesAsync.error is NetworkException);
-
-    return Padding(
-      padding: const EdgeInsets.all(20),
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isOffline)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: HomeOfflineBanner(
-                onRetry: () {
-                  ref.invalidate(cidadesProvider);
-                  ref.invalidate(todasAsRotasProvider);
-                },
-              ),
-            ),
-          const HomeSearchCard(),
-          const SizedBox(height: 16),
-          const SingleChildScrollView(
+          _HomeOfflineBannerConsumer(),
+          HomeSearchCard(),
+          SizedBox(height: 16),
+          SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            physics: BouncingScrollPhysics(),
             child: Row(
               children: [
                 HeroTrustBadge(
@@ -63,12 +48,40 @@ class HomeBodyContent extends ConsumerWidget {
               ],
             ),
           ),
-          const PwaInstallBanner(),
-          const SizedBox(height: 24),
-          const HomeRotasPopularesSection(),
-          const SizedBox(height: 24),
-          const WhyPassaiSection(isDesktop: false),
+          PwaInstallBanner(),
+          SizedBox(height: 24),
+          HomeRotasPopularesSection(),
+          SizedBox(height: 24),
+          WhyPassaiSection(isDesktop: false),
         ],
+      ),
+    );
+  }
+}
+
+/// Consumer isolado para o banner de offline — evita reconstruir o corpo inteiro da Home
+/// quando a consulta assíncrona ao Supabase finaliza.
+class _HomeOfflineBannerConsumer extends ConsumerWidget {
+  const _HomeOfflineBannerConsumer();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rotasAsync = ref.watch(todasAsRotasProvider);
+    final cidadesAsync = ref.watch(cidadesProvider);
+
+    final isOffline = (rotasAsync.hasError && cidadesAsync.hasError) ||
+        (rotasAsync.error is NetworkException ||
+            cidadesAsync.error is NetworkException);
+
+    if (!isOffline) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: HomeOfflineBanner(
+        onRetry: () {
+          ref.invalidate(cidadesProvider);
+          ref.invalidate(todasAsRotasProvider);
+        },
       ),
     );
   }

@@ -26,9 +26,13 @@ class HomePage extends ConsumerWidget {
     return ResponsiveShell(
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        body: Listener(
+          onPointerDown: (_) {
+            final currentFocus = FocusManager.instance.primaryFocus;
+            if (currentFocus != null && currentFocus.hasFocus) {
+              currentFocus.unfocus();
+            }
+          },
           child: RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
@@ -46,8 +50,8 @@ class HomePage extends ConsumerWidget {
             },
             child: CustomScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
               ),
               slivers: [
                 const SliverToBoxAdapter(
