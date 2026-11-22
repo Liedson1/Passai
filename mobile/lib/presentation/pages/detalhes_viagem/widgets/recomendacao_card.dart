@@ -89,8 +89,7 @@ class RecomendacaoCard extends StatelessWidget {
                   style: AppTextStyles.bodyRegular(
                     fontSize: 12,
                     color: AppColors.textPrimary,
-                    height: 1.45,
-                  ),
+                  ).copyWith(height: 1.45),
                 ),
               ],
             ),
