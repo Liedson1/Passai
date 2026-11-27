@@ -120,6 +120,56 @@ void main() {
       expect(entity.alterado, isFalse);
     });
 
+    test('HorarioModel.fromJson ignora alteracao de data diferente da referencia (BKD-01)', () {
+      final json = {
+        'id': 21,
+        'hora': '10:00:00',
+        'sentido': 'IDA',
+        'alteracoes_horario': [
+          {
+            'id': 3,
+            'hora_original': '10:00:00',
+            'hora_nova': '10:45:00',
+            'ativa': true,
+            'data_alteracao': '2026-01-15',
+          }
+        ],
+      };
+
+      // Referência é hoje (ou outra data diferente de 2026-01-15)
+      final model = HorarioModel.fromJson(
+        json,
+        dataReferencia: DateTime(2026, 10, 1),
+      );
+      expect(model.hora, '10:00');
+      expect(model.alteracao, isNull);
+    });
+
+    test('HorarioModel.fromJson aceita alteracao com data correspondente a referencia (BKD-01)', () {
+      final json = {
+        'id': 22,
+        'hora': '14:00:00',
+        'sentido': 'IDA',
+        'alteracoes_horario': [
+          {
+            'id': 4,
+            'hora_original': '14:00:00',
+            'hora_nova': '14:20:00',
+            'ativa': true,
+            'data_alteracao': '2026-10-01',
+          }
+        ],
+      };
+
+      final model = HorarioModel.fromJson(
+        json,
+        dataReferencia: DateTime(2026, 10, 1),
+      );
+      expect(model.hora, '14:20');
+      expect(model.alteracao, isNotNull);
+      expect(model.alteracao?.horaNova, '14:20');
+    });
+
     test('RotaModel.fromJson mapeia seccionamentos e trata distancia_km decimal', () {
       final json = {
         'id': 3,

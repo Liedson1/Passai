@@ -46,10 +46,10 @@ class WebFooter extends StatelessWidget {
                     ),
 
                     // Coluna Legal
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Legal',
                           style: TextStyle(
                             fontSize: 14,
@@ -57,10 +57,31 @@ class WebFooter extends StatelessWidget {
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(height: 12),
-                        _FooterLink(title: 'Termos de Uso'),
-                        _FooterLink(title: 'Políticas de Privacidade'),
-                        _FooterLink(title: 'Contato e Suporte'),
+                        const SizedBox(height: 12),
+                        _FooterLink(
+                          title: 'Termos de Uso',
+                          onTap: () => _showInfoDialog(
+                            context,
+                            'Termos de Uso',
+                            'O Passaí é uma plataforma pública e gratuita de consulta aos horários e tarifas das linhas de vans intermunicipais em Alagoas. As informações apresentadas têm caráter estritamente informativo e refletem a programação operacional dos transportadores.',
+                          ),
+                        ),
+                        _FooterLink(
+                          title: 'Políticas de Privacidade',
+                          onTap: () => _showInfoDialog(
+                            context,
+                            'Políticas de Privacidade',
+                            'No Passaí valorizamos sua privacidade: nosso serviço é 100% aberto, sem necessidade de cadastro, senhas ou coleta de dados cadastrais (RN01 e RN07).',
+                          ),
+                        ),
+                        _FooterLink(
+                          title: 'Contato e Suporte',
+                          onTap: () => _showInfoDialog(
+                            context,
+                            'Contato e Suporte',
+                            'Para esclarecimentos, sugestões ou suporte sobre horários do transporte complementar em Alagoas, entre em contato com as cooperativas regionais ou envie um e-mail para suporte@passai.app.',
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -83,9 +104,15 @@ class WebFooter extends StatelessWidget {
                     ),
                     const Row(
                       children: [
-                        _SocialIcon(icon: Icons.camera_alt_outlined),
+                        _SocialIcon(
+                          icon: Icons.alt_route_rounded,
+                          tooltip: 'Passaí Alagoas',
+                        ),
                         SizedBox(width: 14),
-                        _SocialIcon(icon: Icons.public),
+                        _SocialIcon(
+                          icon: Icons.public,
+                          tooltip: 'Transporte Intermunicipal',
+                        ),
                       ],
                     ),
                   ],
@@ -97,12 +124,50 @@ class WebFooter extends StatelessWidget {
       ),
     );
   }
+
+  void _showInfoDialog(BuildContext context, String title, String content) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Text(
+            content,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _FooterLink extends StatelessWidget {
-  const _FooterLink({required this.title});
+  const _FooterLink({required this.title, this.onTap});
 
   final String title;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -110,12 +175,15 @@ class _FooterLink extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
-        child: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.footerText,
-            decoration: TextDecoration.none,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.footerText,
+              decoration: TextDecoration.none,
+            ),
           ),
         ),
       ),
@@ -124,19 +192,22 @@ class _FooterLink extends StatelessWidget {
 }
 
 class _SocialIcon extends StatelessWidget {
-  const _SocialIcon({required this.icon});
+  const _SocialIcon({required this.icon, this.tooltip});
 
   final IconData icon;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: Icon(
-        icon,
-        color: AppColors.footerText,
-        size: 18,
-      ),
+    final widget = Icon(
+      icon,
+      color: AppColors.footerText,
+      size: 18,
     );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip!, child: widget);
+    }
+    return widget;
   }
 }

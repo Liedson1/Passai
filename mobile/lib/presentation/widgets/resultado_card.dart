@@ -2,131 +2,160 @@ import 'package:flutter/material.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/core/theme/app_text_styles.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
 import 'package:passai/domain/entities/horario.dart';
 
 /// Card individual de resultado na tela de resultados de horários.
 /// Exibe horário, preço, nome da rota, duração e tipo de trajeto (direto/paradas).
 class ResultadoCard extends StatelessWidget {
-  const ResultadoCard({super.key, required this.horario});
+  const ResultadoCard({
+    super.key,
+    required this.horario,
+    this.onVerDetalhes,
+  });
 
   final Horario horario;
+  final VoidCallback? onVerDetalhes;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return MouseRegion(
+      cursor: onVerDetalhes != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      child: GestureDetector(
+        onTap: onVerDetalhes,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadii.card),
+            border: Border.all(color: AppColors.border),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Linha 1: Horário + Preço
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Ícone de relógio
-              const Icon(
-                Icons.access_time_rounded,
-                color: AppColors.secondary,
-                size: 22,
-              ),
-              const SizedBox(width: 8),
-
-              // Horário grande
-              Text(
-                horario.hora,
-                style: AppTextStyles.headingLG(color: AppColors.textPrimary),
-              ),
-
-              const Spacer(),
-
-              // Badge de preço
-              if (horario.preco != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
+              // Linha 1: Horário + Preço
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Ícone de relógio
+                  const Icon(
+                    Icons.access_time_rounded,
                     color: AppColors.secondary,
-                    borderRadius: BorderRadius.circular(AppRadii.badge),
+                    size: 22,
                   ),
+                  const SizedBox(width: 8),
+
+                  // Horário grande
+                  Text(
+                    horario.hora,
+                    style: AppTextStyles.headingLG(color: AppColors.textPrimary),
+                  ),
+
+                  const Spacer(),
+
+                  // Badge de preço
+                  if (horario.preco != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary,
+                        borderRadius: BorderRadius.circular(AppRadii.badge),
+                      ),
+                      child: Text(
+                        'R\$ ${horario.preco!.toStringAsFixed(2).replaceAll('.', ',')}',
+                        style: AppTextStyles.bodyBold(
+                          fontSize: 13,
+                          color: AppColors.textOnPrimary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              // Linha 2: Nome da rota
+              if (horario.nomeRota != null) ...[
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 30),
                   child: Text(
-                    'R\$ ${horario.preco!.toStringAsFixed(2).replaceAll('.', ',')}',
-                    style: AppTextStyles.bodyBold(
+                    horario.nomeRota!,
+                    style: AppTextStyles.bodyMedium(
                       fontSize: 13,
-                      color: AppColors.textOnPrimary,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+
+              // Linha 3: Duração + Tipo de paradas
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.only(left: 30),
+                child: Row(
+                  children: [
+                    // Ícone de van
+                    const Icon(
+                      Icons.directions_bus_outlined,
+                      color: AppColors.textSecondary,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+
+                    // Duração
+                    if (horario.duracao != null)
+                      Text(
+                        DuracaoEstimativa.padronizar(horario.duracao) ?? horario.duracao!,
+                        style: AppTextStyles.bodyRegular(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+
+                    const Spacer(),
+
+                    // Pill de paradas
+                    if (horario.paradas != null) _ParadasPill(paradas: horario.paradas!),
+                  ],
+                ),
+              ),
+
+              // Banner de alteração (quando horário foi alterado - RN06)
+              if (horario.alterado) ...[
+                const SizedBox(height: 10),
+                _AlteracaoBadge(horario: horario),
+              ],
+
+              // Botão Ver no Mapa / Detalhes da Viagem
+              if (onVerDetalhes != null) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onVerDetalhes,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.alt_route_rounded, size: 15),
+                    label: const Text(
+                      'Ver Itinerário',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
+              ],
             ],
           ),
-
-          // Linha 2: Nome da rota
-          if (horario.nomeRota != null) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.only(left: 30),
-              child: Text(
-                horario.nomeRota!,
-                style: AppTextStyles.bodyMedium(
-                  fontSize: 13,
-                  color: AppColors.textPrimary,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-
-          // Linha 3: Duração + Tipo de paradas
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.only(left: 30),
-            child: Row(
-              children: [
-                // Ícone de van
-                const Icon(
-                  Icons.directions_bus_outlined,
-                  color: AppColors.textSecondary,
-                  size: 16,
-                ),
-                const SizedBox(width: 6),
-
-                // Duração
-                if (horario.duracao != null)
-                  Text(
-                    horario.duracao!,
-                    style: AppTextStyles.bodyRegular(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-
-                const Spacer(),
-
-                // Pill de paradas
-                if (horario.paradas != null) _ParadasPill(paradas: horario.paradas!),
-              ],
-            ),
-          ),
-
-          // Banner de alteração (quando horário foi alterado - RN06)
-          if (horario.alterado) ...[
-            const SizedBox(height: 10),
-            _AlteracaoBadge(horario: horario),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -166,7 +195,10 @@ class _AlteracaoBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final alt = horario.alteracao!;
+    final alt = horario.alteracao;
+
+    // Guard explícito: nunca deveria ser null aqui, mas protege contra refactors futuros
+    if (alt == null) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(10),

@@ -83,8 +83,39 @@ void main() {
         find.text("Delmiro Gouveia x Piranhas (via Olho d'Água)"),
         findsOneWidget,
       );
-      expect(find.text('1h 10m'), findsOneWidget);
+      expect(find.text('1h 10min'), findsOneWidget);
       expect(find.text('4 paradas'), findsOneWidget);
+    });
+
+    testWidgets('Deve exibir botão Ver Itinerário e chamar callback ao tocar',
+        (tester) async {
+      bool clicouDetalhes = false;
+      const horarioMock = Horario(
+        id: 3,
+        hora: '14:00',
+        sentido: Sentido.ida,
+        preco: 20.00,
+        duracao: '50 min',
+        paradas: 'Direto',
+        nomeRota: 'Arapiraca x Maceió',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResultadoCard(
+              horario: horarioMock,
+              onVerDetalhes: () => clicouDetalhes = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Ver Itinerário'), findsOneWidget);
+      await tester.tap(find.text('Ver Itinerário'));
+      await tester.pump();
+
+      expect(clicouDetalhes, isTrue);
     });
   });
 }

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:passai/core/utils/filtro_periodo_utils.dart';
 import 'package:passai/domain/entities/horario.dart';
-import 'package:passai/presentation/providers/resultados_provider.dart';
 
 void main() {
-  group('filtrarPorPeriodo Tests', () {
+  group('FiltroPeriodoUtils.filtrar Tests', () {
     final horarios = [
       const Horario(id: 1, hora: '04:30', sentido: Sentido.ida),
       const Horario(id: 2, hora: '05:00', sentido: Sentido.ida),
@@ -19,12 +19,12 @@ void main() {
     ];
 
     test('FiltroPeriodo.todos deve retornar todos os horários', () {
-      final resultado = filtrarPorPeriodo(horarios, FiltroPeriodo.todos);
+      final resultado = FiltroPeriodoUtils.filtrar(horarios, FiltroPeriodo.todos);
       expect(resultado.length, 11);
     });
 
     test('FiltroPeriodo.manha deve incluir 04h, 05h, 06h e horários antes das 12h', () {
-      final resultado = filtrarPorPeriodo(horarios, FiltroPeriodo.manha);
+      final resultado = FiltroPeriodoUtils.filtrar(horarios, FiltroPeriodo.manha);
       final horas = resultado.map((h) => h.hora).toList();
 
       expect(horas, containsAll(['04:30', '05:00', '05:30', '06:00', '11:45']));
@@ -34,7 +34,7 @@ void main() {
     });
 
     test('FiltroPeriodo.tarde deve incluir apenas horários entre 12h e 17h59', () {
-      final resultado = filtrarPorPeriodo(horarios, FiltroPeriodo.tarde);
+      final resultado = FiltroPeriodoUtils.filtrar(horarios, FiltroPeriodo.tarde);
       final horas = resultado.map((h) => h.hora).toList();
 
       expect(horas, containsAll(['12:00', '14:30', '17:50']));
@@ -44,7 +44,7 @@ void main() {
     });
 
     test('FiltroPeriodo.noite deve incluir apenas horários entre 18h e 23h59 e NUNCA 05h ou madrugada', () {
-      final resultado = filtrarPorPeriodo(horarios, FiltroPeriodo.noite);
+      final resultado = FiltroPeriodoUtils.filtrar(horarios, FiltroPeriodo.noite);
       final horas = resultado.map((h) => h.hora).toList();
 
       expect(horas, containsAll(['18:00', '20:15', '22:40']));

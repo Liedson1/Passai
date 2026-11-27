@@ -38,12 +38,7 @@ class RotaModel {
     final diasOperacao = json['dias_operacao'] as String? ?? 'Segunda a Domingo';
 
     final id = json['id'] as int;
-    double? tarifa = (json['tarifa'] as num?)?.toDouble();
-    if (id == 6) {
-      tarifa = 36.00;
-    } else if (id == 54) {
-      tarifa = 28.00;
-    }
+    final tarifa = (json['tarifa'] as num?)?.toDouble();
 
     return RotaModel(
       id: id,

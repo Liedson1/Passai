@@ -13,7 +13,6 @@ dependencies:
     sdk: flutter
 
   # Design
-  google_fonts: ^6.2.1
   intl: ^0.19.0
 
   # Backend / BaaS
@@ -30,10 +29,11 @@ dependencies:
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
 
-  # Variáveis de ambiente
-  flutter_dotenv: ^5.2.1
+  # Ícones e gráficos
   flutter_svg: ^2.3.0
-
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  http: ^1.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -48,5 +48,25 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - .env
     - assets/images/
+
+  fonts:
+    - family: Jua
+      fonts:
+        - asset: assets/fonts/Jua-Regular.ttf
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Outfit-ExtraBold.ttf
+          weight: 800
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Manrope-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Manrope-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-Bold.ttf
+          weight: 700

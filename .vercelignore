@@ -1,0 +1,8 @@
+.git
+.idea
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter_sdk/
+docs/
+supabase/
+scripts/

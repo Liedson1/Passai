@@ -1,3 +1,4 @@
+import 'package:passai/core/utils/text_normalizer.dart';
 import 'package:passai/domain/entities/horario.dart';
 import 'package:passai/domain/entities/rota.dart';
 import 'package:passai/domain/repositories/rotas_repository.dart';
@@ -28,12 +29,12 @@ class BuscarRotas {
     final todasAsRotas = await _repository.buscarTodasAsRotas();
     final resultados = <RotaSearchResult>[];
 
-    final origemNorm = _normalizar(origem);
-    final destinoNorm = _normalizar(destino);
+    final origemNorm = normalizar(origem);
+    final destinoNorm = normalizar(destino);
 
     for (final rota in todasAsRotas) {
-      final rotaOrigemNorm = _normalizar(rota.origem);
-      final rotaDestinoNorm = _normalizar(rota.destino);
+      final rotaOrigemNorm = normalizar(rota.origem);
+      final rotaDestinoNorm = normalizar(rota.destino);
 
       // Sentido direto (origem -> destino = IDA)
       if (rotaOrigemNorm == origemNorm && rotaDestinoNorm == destinoNorm) {
@@ -48,18 +49,9 @@ class BuscarRotas {
     return resultados;
   }
 
-  /// Normaliza texto removendo acentos, espaços extras e convertendo para minúsculas.
-  static String _normalizar(String str) {
-    return str
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'[àáâãäå]'), 'a')
-        .replaceAll(RegExp(r'[èéêë]'), 'e')
-        .replaceAll(RegExp(r'[ìíîï]'), 'i')
-        .replaceAll(RegExp(r'[òóôõö]'), 'o')
-        .replaceAll(RegExp(r'[ùúûü]'), 'u')
-        .replaceAll(RegExp(r'[ç]'), 'c');
-  }
+  /// Normaliza texto para comparação resiliente.
+  /// Delega para [TextNormalizer.normalizar] — implementação única no projeto.
+  static String normalizar(String str) => TextNormalizer.normalizar(str);
 
   /// Retorna rotas que combinam com a [origem] e o [destino] informados.
   /// Suporta tanto o sentido direto quanto o reverso.

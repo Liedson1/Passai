@@ -1,3 +1,5 @@
+import 'package:passai/core/utils/dias_funcionamento_parser.dart';
+
 import 'alteracao.dart';
 
 /// Sentido da viagem
@@ -47,45 +49,37 @@ class Horario {
   /// Indica se a viagem é direta (sem paradas intermediárias)
   bool get isDireto => paradas == null || paradas == 'Direto';
 
-  /// Verifica se este horário opera na data fornecida (RN10)
-  /// [DateTime.weekday]: 1 = Segunda, ..., 7 = Domingo
+  /// Verifica se este horário opera na data fornecida (RN10).
+  /// Delega a lógica de parsing para [DiasFuncionamentoParser].
   bool operaNoDia(DateTime data) {
-    final r = diasFuncionamento.toLowerCase();
-    final weekday = data.weekday;
-
-    if (r.contains('diariamente') || r.contains('segunda a domingo')) {
-      return true;
-    }
-    if (r.contains('segunda a sábado') || r.contains('segunda a sabado')) {
-      return weekday >= 1 && weekday <= 6;
-    }
-    if (r.contains('segunda a sexta')) {
-      return weekday >= 1 && weekday <= 5;
-    }
-    if (r.contains('terça a domingo') || r.contains('terca a domingo')) {
-      return weekday >= 2 && weekday <= 7;
-    }
-    if (r.contains('terça a sexta') || r.contains('terca a sexta')) {
-      return weekday >= 2 && weekday <= 5;
-    }
-    if (r.contains('quarta, sexta e sábado') || r.contains('quarta, sexta e sabado')) {
-      return weekday == 1 || weekday == 2 || weekday == 3 || weekday == 5 || weekday == 6;
-    }
-    if (r.contains('quarta e sexta')) {
-      return weekday == 1 || weekday == 2 || weekday == 3 || weekday == 5;
-    }
-    if (r.contains('segunda-feira') || r == 'segunda') {
-      return weekday == 1;
-    }
-    if (r.contains('quinta-feira') || r == 'quinta') {
-      return weekday == 4;
-    }
-    if (r.contains('sábado') || r.contains('sabado')) {
-      return weekday == 6;
-    }
-    if (r.contains('domingo')) {
-      return weekday == 7;
-    }
-    return true;
+    return DiasFuncionamentoParser.opera(diasFuncionamento, data);
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Horario &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          hora == other.hora &&
+          sentido == other.sentido &&
+          diasFuncionamento == other.diasFuncionamento &&
+          alteracao == other.alteracao &&
+          preco == other.preco &&
+          duracao == other.duracao &&
+          paradas == other.paradas &&
+          nomeRota == other.nomeRota;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        hora,
+        sentido,
+        diasFuncionamento,
+        alteracao,
+        preco,
+        duracao,
+        paradas,
+        nomeRota,
+      );
 }

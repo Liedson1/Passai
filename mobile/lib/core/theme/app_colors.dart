@@ -23,6 +23,7 @@ class AppColors {
   static const Color textPrimary = Color(0xFF2B1D19);
   static const Color textSecondary = Color(0xFF8F7D77);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
+  static const Color onDark = Color(0xFFFFFFFF); // Contraste em fundos escuros ou primários
 
   // Overlay do hero
   static const Color heroOverlay = Color(0x26FFFFFF); // rgba(255,255,255,0.15)
@@ -33,6 +34,10 @@ class AppColors {
   static const Color successLight = Color(0xFFE8F5E9);
   static const Color warning = Color(0xFFE67E22);
   static const Color warningLight = Color(0xFFFFF3E0);
+
+  // Amber — usado no card de benefício "Sem Surpresas"
+  static const Color amber = Color(0xFFB45309);
+  static const Color amberLight = Color(0xFFFEF3C7);
 
   // Seletor de data
   static const Color dateChipActive = primary;

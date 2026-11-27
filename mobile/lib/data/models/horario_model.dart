@@ -1,3 +1,4 @@
+import 'package:passai/core/utils/duracao_estimativa.dart';
 import 'package:passai/data/models/alteracao_model.dart';
 import 'package:passai/domain/entities/horario.dart';
 
@@ -25,15 +26,30 @@ class HorarioModel {
   final String? paradas;
   final String? nomeRota;
 
-  factory HorarioModel.fromJson(Map<String, dynamic> json) {
-    // Horário exibido: hora_nova se houver alteração ativa, senão hora original
+  factory HorarioModel.fromJson(
+    Map<String, dynamic> json, {
+    DateTime? dataReferencia,
+  }) {
+    // Horário exibido: hora_nova se houver alteração ativa para a data informada (ou hoje), senão hora original
     final alteracaoJson = json['alteracoes_horario'] as List?;
     AlteracaoModel? alteracaoModel;
 
     if (alteracaoJson != null && alteracaoJson.isNotEmpty) {
+      final ref = dataReferencia ?? DateTime.now();
+      final refStr =
+          '${ref.year.toString().padLeft(4, '0')}-${ref.month.toString().padLeft(2, '0')}-${ref.day.toString().padLeft(2, '0')}';
+
       final ativas = alteracaoJson
           .whereType<Map<String, dynamic>>()
-          .where((a) => a['ativa'] != false)
+          .where((a) {
+            final ativa = a['ativa'] != false;
+            if (!ativa) return false;
+            final dataAlt = a['data_alteracao'] as String?;
+            if (dataAlt == null) return true;
+            final dataAltPrefix =
+                dataAlt.length >= 10 ? dataAlt.substring(0, 10) : dataAlt;
+            return dataAltPrefix == refStr;
+          })
           .toList();
       if (ativas.isNotEmpty) {
         alteracaoModel = AlteracaoModel.fromJson(ativas.first);
@@ -65,9 +81,8 @@ class HorarioModel {
       }
       preco ??= (rotaMap['tarifa'] as num?)?.toDouble();
       final dist = (rotaMap['distancia_km'] as num?)?.toInt();
-      if (dist != null && duracao == null) {
-        duracao = '${(dist * 0.9).round()} min';
-      }
+      duracao ??= DuracaoEstimativa.estimar(dist);
+      duracao = DuracaoEstimativa.padronizar(duracao);
       final secc = rotaMap['seccionamentos'] as String?;
       if (secc != null && secc.trim().isNotEmpty) {
         paradas ??= 'Com paradas';

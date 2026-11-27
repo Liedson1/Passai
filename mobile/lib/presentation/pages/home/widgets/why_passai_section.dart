@@ -65,19 +65,10 @@ class WhyPassaiSection extends StatelessWidget {
 
   static const _beneficios = [
     _BeneficioItem(
-      icon: Icons.schedule_rounded,
-      tag: 'Previsibilidade Real',
-      tagColor: AppColors.primary,
-      tagBgColor: AppColors.primaryLight,
-      titulo: 'Chega de esperar van que não vem',
-      descricao:
-          'Sabemos que imprevistos acontecem. O Passaí sinaliza alterações de horário do dia e avisa quando outra van assume a viagem, para você não ficar esperando à toa.',
-    ),
-    _BeneficioItem(
       icon: Icons.payments_outlined,
       tag: 'Sem Surpresas',
-      tagColor: Color(0xFFB45309), // Amber dark
-      tagBgColor: Color(0xFFFEF3C7), // Amber light
+      tagColor: AppColors.amber,
+      tagBgColor: AppColors.amberLight,
       titulo: 'Preço certo antes de sair de casa',
       descricao:
           'Consulte o valor exato da tarifa com antecedência. Sem surpresas ou dúvidas de quanto vai custar a passagem no momento do embarque.',
@@ -195,29 +186,14 @@ class WhyPassaiSection extends StatelessWidget {
 
               const SizedBox(height: 48),
 
-              // Grid 2x2 com os 4 Benefícios e Dores
+              // Grid com os 3 Benefícios Reais
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        _BeneficioCard(item: _beneficios[0]),
-                        const SizedBox(height: 20),
-                        _BeneficioCard(item: _beneficios[2]),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        _BeneficioCard(item: _beneficios[1]),
-                        const SizedBox(height: 20),
-                        _BeneficioCard(item: _beneficios[3]),
-                      ],
-                    ),
-                  ),
+                  for (int i = 0; i < _beneficios.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 20),
+                    Expanded(child: _BeneficioCard(item: _beneficios[i])),
+                  ],
                 ],
               ),
 
@@ -437,13 +413,6 @@ class _BeneficioCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

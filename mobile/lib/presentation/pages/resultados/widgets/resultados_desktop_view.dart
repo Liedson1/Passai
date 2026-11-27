@@ -3,8 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
+import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/core/theme/app_colors.dart';
 import 'package:passai/domain/entities/horario.dart';
+import 'package:passai/domain/entities/detalhes_viagem.dart';
+import 'package:passai/domain/entities/rota.dart';
+import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/resultados_provider.dart';
 import 'package:passai/presentation/widgets/web/web_footer.dart';
@@ -12,9 +17,16 @@ import 'package:passai/presentation/widgets/web/web_navbar.dart';
 
 /// Visualização Web Desktop para a página de Resultados de Viagem (fiel ao mockup)
 class ResultadosDesktopView extends ConsumerWidget {
-  const ResultadosDesktopView({super.key, required this.args});
+  const ResultadosDesktopView({
+    super.key,
+    required this.args,
+    this.sentidoAtual,
+    this.onInverterSentido,
+  });
 
   final ResultadosArgs args;
+  final Sentido? sentidoAtual;
+  final VoidCallback? onInverterSentido;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,29 +34,30 @@ class ResultadosDesktopView extends ConsumerWidget {
     final filtro = ref.watch(filtroPeriodoProvider);
     final dias = gerarDiasSeletor(dataSelecionada);
 
+    final sentido = sentidoAtual ?? args.sentido;
     final params = ResultadosParams(
       rotaId: args.rota.id,
-      sentido: args.sentido,
+      sentido: sentido,
       data: dataSelecionada,
     );
     final horariosAsync = ref.watch(resultadosHorariosProvider(params));
 
     final rota = args.rota;
-    final sentido = args.sentido;
     final origemExibida = sentido == Sentido.ida ? rota.origem : rota.destino;
     final destinoExibido = sentido == Sentido.ida ? rota.destino : rota.origem;
 
     final precoPadraoStr = rota.tarifa != null
         ? 'R\$ ${rota.tarifa!.toStringAsFixed(2).replaceAll('.', ',')}'
-        : 'R\$ 15,00';
+        : 'Consulte';
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
         child: Column(
           children: [
             // 1. Barra de Navegação Superior
-            const WebNavbar(),
+            const RepaintBoundary(child: WebNavbar()),
 
             // 2. Sub-header com Botão Voltar e Título da Rota
             Container(
@@ -122,14 +135,38 @@ class ResultadosDesktopView extends ConsumerWidget {
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 10),
-                              child: Icon(
-                                Icons.arrow_forward_rounded,
-                                color: AppColors.primary,
-                                size: 22,
+                            if (onInverterSentido != null)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: Tooltip(
+                                  message: 'Inverter para volta',
+                                  child: Material(
+                                    color: AppColors.primaryLight,
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      onTap: onInverterSentido,
+                                      customBorder: const CircleBorder(),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.swap_horiz_rounded,
+                                          color: AppColors.primary,
+                                          size: 22,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: AppColors.primary,
+                                  size: 22,
+                                ),
                               ),
-                            ),
                             Text(
                               destinoExibido,
                               style: const TextStyle(
@@ -369,7 +406,7 @@ class ResultadosDesktopView extends ConsumerWidget {
                             ),
                           ),
                           data: (horarios) {
-                            final filtrados = filtrarPorPeriodo(horarios, filtro);
+                            final filtrados = FiltroPeriodoUtils.filtrar(horarios, filtro);
 
                             if (filtrados.isEmpty) {
                               return Container(
@@ -411,12 +448,18 @@ class ResultadosDesktopView extends ConsumerWidget {
                             return Column(
                               children: filtrados.map((horario) {
                                 return Padding(
+                                  key: ValueKey(horario.id),
                                   padding: const EdgeInsets.only(bottom: 14),
-                                  child: _DesktopViagemCard(
-                                    horario: horario,
-                                    origem: origemExibida,
-                                    destino: destinoExibido,
-                                    precoStr: precoPadraoStr,
+                                  child: RepaintBoundary(
+                                    child: _DesktopViagemCard(
+                                      horario: horario,
+                                      rota: rota,
+                                      origem: origemExibida,
+                                      destino: destinoExibido,
+                                      precoStr: precoPadraoStr,
+                                      rotaId: rota.id,
+                                      sentido: sentido == Sentido.ida ? 'IDA' : 'VOLTA',
+                                    ),
                                   ),
                                 );
                               }).toList(),
@@ -433,7 +476,7 @@ class ResultadosDesktopView extends ConsumerWidget {
             const SizedBox(height: 64),
 
             // 4. Rodapé Escuro Institucional
-            const WebFooter(),
+            const RepaintBoundary(child: WebFooter()),
           ],
         ),
       ),
@@ -447,15 +490,21 @@ class ResultadosDesktopView extends ConsumerWidget {
 class _DesktopViagemCard extends StatelessWidget {
   const _DesktopViagemCard({
     required this.horario,
+    required this.rota,
     required this.origem,
     required this.destino,
     required this.precoStr,
+    required this.rotaId,
+    required this.sentido,
   });
 
   final Horario horario;
+  final Rota rota;
   final String origem;
   final String destino;
   final String precoStr;
+  final int rotaId;
+  final String sentido;
 
   @override
   Widget build(BuildContext context) {
@@ -564,7 +613,7 @@ class _DesktopViagemCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    horario.duracao ?? '45 min',
+                    DuracaoEstimativa.padronizar(horario.duracao) ?? '45 min',
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
@@ -594,10 +643,58 @@ class _DesktopViagemCard extends StatelessWidget {
               // Botão Ver no Mapa / Detalhes
               OutlinedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Linha: $origem → $destino às ${horario.hora}'),
-                      duration: const Duration(seconds: 2),
+                  final precoFormatado = horario.preco != null
+                      ? 'R\$ ${horario.preco!.toStringAsFixed(2).replaceAll('.', ',')}'
+                      : precoStr;
+
+                  // Itinerário estático mínimo (partida + chegada)
+                  // A tela de detalhes buscará as paradas reais do Supabase
+                  // usando rotaId e sentido
+                  final itinerarioFallback = ItinerarioHelper.criarItinerarioFallback(
+                    origem: origem,
+                    destino: destino,
+                    horarioSaida: horario.hora,
+                    rotaId: rota.id,
+                    seccionamentos: rota.seccionamentos,
+                  );
+
+                  final duracaoStr = DuracaoEstimativa.padronizar(horario.duracao) ??
+                      (rota.distanciaKm != null
+                          ? DuracaoEstimativa.estimar(rota.distanciaKm) ?? 'A consultar'
+                          : 'A consultar');
+                  final distanciaStr = rota.distanciaKm != null
+                      ? '${rota.distanciaKm} km'
+                      : 'A consultar';
+
+                  final detalhes = DetalhesViagem(
+                    codigo: horario.nomeRota ?? '$origem x $destino',
+                    preco: precoFormatado,
+                    rota: '$origem x $destino',
+                    origem: origem,
+                    destino: destino,
+                    itinerario: itinerarioFallback,
+                    horaSaida: horario.hora,
+                    duracao: duracaoStr,
+                    distancia: distanciaStr,
+                    tipoLinha: 'Transporte Intermunicipal',
+                    veiculoNumero: horario.alteracao?.vanSubstituta ??
+                        horario.alteracao?.vanOriginal,
+                    vanOriginal: horario.alteracao?.vanOriginal,
+                    vanSubstituta: horario.alteracao?.vanSubstituta,
+                    via: rota.via,
+                    diasOperacao: rota.diasOperacao,
+                    seccionamentos: rota.seccionamentos,
+                    alterado: horario.alterado,
+                    alteracaoMotivo: horario.alteracao?.motivo,
+                  );
+
+                  final horaEncoded = Uri.encodeComponent(horario.hora);
+                  context.push(
+                    '${AppRoutes.detalhesViagem}?rotaId=$rotaId&sentido=$sentido&hora=$horaEncoded',
+                    extra: DetalhesViagemArgs(
+                      detalhes: detalhes,
+                      rotaId: rotaId,
+                      sentido: sentido,
                     ),
                   );
                 },
@@ -609,9 +706,9 @@ class _DesktopViagemCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                icon: const Icon(Icons.map_outlined, size: 14),
+                icon: const Icon(Icons.alt_route_rounded, size: 14),
                 label: const Text(
-                  'Ver Rota no Mapa',
+                  'Ver Itinerário',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),

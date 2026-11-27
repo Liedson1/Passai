@@ -2,81 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:passai/core/constants/app_constants.dart';
+import 'package:passai/core/constants/popular_routes.dart';
 import 'package:passai/core/errors/exceptions.dart';
+import 'package:passai/core/utils/duracao_estimativa.dart';
+import 'package:passai/core/utils/itinerario_helper.dart';
 import 'package:passai/core/theme/app_colors.dart';
+import 'package:passai/domain/entities/detalhes_viagem.dart';
 import 'package:passai/domain/entities/horario.dart';
 import 'package:passai/domain/entities/rota.dart';
+import 'package:passai/domain/usecases/buscar_rotas.dart';
+import 'package:passai/presentation/pages/detalhes_viagem/detalhes_viagem_page.dart';
 import 'package:passai/presentation/pages/resultados/resultados_page.dart';
 import 'package:passai/presentation/providers/rotas_provider.dart';
 import 'package:passai/presentation/widgets/web/web_footer.dart';
 import 'package:passai/presentation/widgets/web/web_navbar.dart';
 import 'why_passai_section.dart';
-
-/// Configuração de uma rota em destaque na Home Desktop
-class _DesktopRotaDestaque {
-  const _DesktopRotaDestaque({
-    required this.origem,
-    required this.destino,
-    this.via,
-    required this.preco,
-    this.horarioSaida = '13:40',
-    required this.fallbackId,
-  });
-
-  final String origem;
-  final String destino;
-  final String? via;
-  final String preco;
-  final String horarioSaida;
-  final int fallbackId;
-}
-
-const _destaquesDesktop = [
-  _DesktopRotaDestaque(
-    origem: 'Arapiraca',
-    destino: 'Maceió',
-    via: 'via Litoral',
-    preco: 'R\$ 36,00',
-    horarioSaida: '06:00',
-    fallbackId: 6,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Arapiraca',
-    destino: 'Olho d\'Água das Flores',
-    preco: 'R\$ 28,00',
-    horarioSaida: '06:30',
-    fallbackId: 54,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Palmeira dos Índios',
-    destino: 'Arapiraca',
-    preco: 'R\$ 10,00',
-    horarioSaida: '05:30',
-    fallbackId: 67,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Água Branca',
-    destino: 'Delmiro Gouveia',
-    via: 'via Lagoa das Pedras',
-    preco: 'R\$ 12,00',
-    horarioSaida: '15:10',
-    fallbackId: 2,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Delmiro Gouveia',
-    destino: 'Arapiraca',
-    preco: 'R\$ 29,30',
-    horarioSaida: '13:40',
-    fallbackId: 26,
-  ),
-  _DesktopRotaDestaque(
-    origem: 'Piranhas',
-    destino: 'Delmiro Gouveia',
-    preco: 'R\$ 18,00',
-    horarioSaida: '15:00',
-    fallbackId: 78,
-  ),
-];
 
 /// Visualização Web Desktop completa da Home (reprodução fiel ao mockup)
 class HomeDesktopView extends ConsumerStatefulWidget {
@@ -127,7 +67,7 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
       if (resultados.isNotEmpty) {
         final match = resultados.first;
         context.push(
-          AppRoutes.resultados,
+          '${AppRoutes.resultados}?origem=${Uri.encodeComponent(origem.trim())}&destino=${Uri.encodeComponent(destino.trim())}&sentido=${match.sentido.name}',
           extra: ResultadosArgs(
             rota: match.rota,
             sentido: match.sentido,
@@ -173,6 +113,9 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         child: Column(
           children: [
             // 1. Barra de Navegação Superior
@@ -234,9 +177,9 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                           borderRadius: BorderRadius.circular(22),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 28,
-                              offset: const Offset(0, 10),
+                              color: Colors.black.withValues(alpha: 0.10),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
@@ -478,7 +421,7 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                       const SizedBox(height: 24),
 
                       // Lista de Cards de Rotas Populares
-                      ..._destaquesDesktop.map((destaque) {
+                      ...rotasPopularesDestaque.map((destaque) {
                         // Localiza rota no banco considerando origem, destino e via se especificada
                         Rota? rotaEncontrada = todasRotas.where((r) {
                           final matchOrig = r.origem.toLowerCase().contains(destaque.origem.toLowerCase());
@@ -507,12 +450,11 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                               origem: destaque.origem,
                               destino: destaque.destino,
                               diasOperacao: 'Diariamente',
+                              tarifa: destaque.precoPadrao,
                             );
 
-                        final tarifa = rotaFinal.tarifa;
-                        final precoFormatado = tarifa != null
-                            ? 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}'
-                            : destaque.preco;
+                        final tarifa = rotaFinal.tarifa ?? destaque.precoPadrao;
+                        final precoFormatado = 'R\$ ${tarifa.toStringAsFixed(2).replaceAll('.', ',')}';
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -522,9 +464,55 @@ class _HomeDesktopViewState extends ConsumerState<HomeDesktopView> {
                             via: destaque.via,
                             preco: precoFormatado,
                             horarioSaida: destaque.horarioSaida,
+                            onVerDetalhes: () {
+                              final itinerarioFallback = ItinerarioHelper.criarItinerarioFallback(
+                                origem: destaque.origem,
+                                destino: destaque.destino,
+                                horarioSaida: destaque.horarioSaida,
+                                rotaId: rotaFinal.id,
+                                seccionamentos: rotaFinal.seccionamentos,
+                                paradasIntermediarias: destaque.paradasIntermediarias,
+                              );
+
+                              final duracaoStr = rotaFinal.distanciaKm != null
+                                  ? DuracaoEstimativa.estimar(rotaFinal.distanciaKm) ?? '1h 45min'
+                                  : '1h 45min';
+                              final distanciaStr = rotaFinal.distanciaKm != null
+                                  ? '${rotaFinal.distanciaKm} km'
+                                  : '85 km';
+
+                              final detalhes = DetalhesViagem(
+                                codigo: rotaFinal.linha,
+                                preco: precoFormatado,
+                                rota: '${destaque.origem} x ${destaque.destino}',
+                                origem: destaque.origem,
+                                destino: destaque.destino,
+                                itinerario: itinerarioFallback,
+                                horaSaida: destaque.horarioSaida,
+                                duracao: duracaoStr,
+                                distancia: distanciaStr,
+                                tipoLinha: 'Transporte Intermunicipal',
+                                diasOperacao: rotaFinal.diasOperacao,
+                                seccionamentos: rotaFinal.seccionamentos,
+                                via: destaque.via != null
+                                    ? (destaque.via!.toLowerCase().startsWith('via')
+                                        ? destaque.via!
+                                        : 'Via ${destaque.via!}')
+                                    : null,
+                              );
+
+                              context.push(
+                                '${AppRoutes.detalhesViagem}?rotaId=${rotaFinal.id}&sentido=${sentido == Sentido.ida ? 'IDA' : 'VOLTA'}',
+                                extra: DetalhesViagemArgs(
+                                  detalhes: detalhes,
+                                  rotaId: rotaFinal.id,
+                                  sentido: sentido == Sentido.ida ? 'IDA' : 'VOLTA',
+                                ),
+                              );
+                            },
                             onTap: () {
                               context.push(
-                                AppRoutes.resultados,
+                                '${AppRoutes.resultados}?origem=${Uri.encodeComponent(destaque.origem)}&destino=${Uri.encodeComponent(destaque.destino)}&sentido=${sentido.name}',
                                 extra: ResultadosArgs(
                                   rota: rotaFinal,
                                   sentido: sentido,
@@ -563,6 +551,7 @@ class _DesktopRouteCard extends StatefulWidget {
     required this.preco,
     required this.horarioSaida,
     required this.onTap,
+    required this.onVerDetalhes,
   });
 
   final String origem;
@@ -571,6 +560,7 @@ class _DesktopRouteCard extends StatefulWidget {
   final String preco;
   final String horarioSaida;
   final VoidCallback onTap;
+  final VoidCallback onVerDetalhes;
 
   @override
   State<_DesktopRouteCard> createState() => _DesktopRouteCardState();
@@ -597,13 +587,11 @@ class _DesktopRouteCardState extends State<_DesktopRouteCard> {
               color: _isHovered ? AppColors.primary : AppColors.border,
               width: _isHovered ? 1.5 : 1,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: _isHovered
-                    ? AppColors.primary.withValues(alpha: 0.08)
-                    : Colors.black.withValues(alpha: 0.02),
-                blurRadius: _isHovered ? 12 : 4,
-                offset: const Offset(0, 4),
+                color: Color(0x0A000000),
+                blurRadius: 6,
+                offset: Offset(0, 2),
               ),
             ],
           ),
@@ -655,21 +643,64 @@ class _DesktopRouteCardState extends State<_DesktopRouteCard> {
                 ],
               ),
 
-              // Badge de Preço
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  widget.preco,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+              // Ações: Preço + Botão Ver Rota no Mapa + Botão Ver Horários
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Badge de Preço
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      widget.preco,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  // Botão Ver Rota no Mapa
+                  OutlinedButton.icon(
+                    onPressed: widget.onVerDetalhes,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.alt_route_rounded, size: 15),
+                    label: const Text(
+                      'Ver Itinerário',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Botão Ver Horários
+                  ElevatedButton.icon(
+                    onPressed: widget.onTap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    icon: const Icon(Icons.schedule_rounded, size: 15),
+                    label: const Text(
+                      'Ver Horários',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -753,13 +784,22 @@ class _DesktopInputPillState extends State<_DesktopInputPill> {
               textEditingController: _controller,
               focusNode: _focusNode,
               optionsBuilder: (textEditingValue) {
-                final termo = textEditingValue.text.trim().toLowerCase();
+                final termo = textEditingValue.text.trim();
                 if (termo.isEmpty) return widget.cidades;
-                return widget.cidades.where(
-                  (c) => c.toLowerCase().contains(termo),
-                );
+                final termoNorm = BuscarRotas.normalizar(termo);
+                final matches = widget.cidades.where(
+                  (c) => BuscarRotas.normalizar(c).contains(termoNorm),
+                ).toList();
+
+                if (matches.length == 1 &&
+                    BuscarRotas.normalizar(matches.first) == termoNorm) {
+                  return const Iterable<String>.empty();
+                }
+
+                return matches;
               },
               onSelected: (cidade) {
+                _controller.text = cidade;
                 widget.onSelecionada(cidade);
                 _focusNode.unfocus();
               },
@@ -780,6 +820,43 @@ class _DesktopInputPillState extends State<_DesktopInputPill> {
                     TextField(
                       controller: controller,
                       focusNode: focusNode,
+                      onChanged: (text) {
+                        final trimmed = text.trim();
+                        if (trimmed.isEmpty) {
+                          widget.onLimpa();
+                        } else {
+                          final textNorm = BuscarRotas.normalizar(trimmed);
+                          final exactMatch = widget.cidades.firstWhere(
+                            (c) => BuscarRotas.normalizar(c) == textNorm,
+                            orElse: () => '',
+                          );
+                          if (exactMatch.isNotEmpty &&
+                              exactMatch != widget.valorAtual) {
+                            widget.onSelecionada(exactMatch);
+                          }
+                        }
+                      },
+                      onSubmitted: (_) {
+                        final text = controller.text.trim();
+                        if (text.isNotEmpty) {
+                          final textNorm = BuscarRotas.normalizar(text);
+                          final match = widget.cidades.firstWhere(
+                            (c) => BuscarRotas.normalizar(c) == textNorm,
+                            orElse: () {
+                              return widget.cidades.firstWhere(
+                                (c) => BuscarRotas.normalizar(c).contains(textNorm),
+                                orElse: () => '',
+                              );
+                            },
+                          );
+                          if (match.isNotEmpty) {
+                            controller.text = match;
+                            widget.onSelecionada(match);
+                            focusNode.unfocus();
+                          }
+                        }
+                        onFieldSubmitted();
+                      },
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -813,7 +890,6 @@ class _DesktopInputPillState extends State<_DesktopInputPill> {
                       ),
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(vertical: 6),
-                        shrinkWrap: true,
                         itemCount: options.length,
                         itemBuilder: (context, index) {
                           final option = options.elementAt(index);

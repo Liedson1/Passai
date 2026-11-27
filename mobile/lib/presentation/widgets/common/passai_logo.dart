@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:passai/core/theme/app_colors.dart';
 
 enum PassaiLogoVariant {
@@ -106,7 +105,9 @@ class PassaiLogo extends StatelessWidget {
           SizedBox(width: h * 0.28),
           Text(
             'PASSAÍ',
-            style: GoogleFonts.jua(
+            style: TextStyle(
+              fontFamily: 'Jua',
+              fontFamilyFallback: const ['Outfit', 'Manrope'],
               fontSize: h * 0.75,
               letterSpacing: 1.0,
               color: effectiveColor,
@@ -135,7 +136,9 @@ class PassaiLogo extends StatelessWidget {
             SizedBox(width: h * 0.2),
             Text(
               'PASSAÍ',
-              style: GoogleFonts.jua(
+              style: TextStyle(
+                fontFamily: 'Jua',
+                fontFamilyFallback: const ['Outfit', 'Manrope'],
                 fontSize: h * 0.54,
                 letterSpacing: 1.0,
                 color: Colors.white,
@@ -157,7 +160,9 @@ class PassaiLogo extends StatelessWidget {
     if (variant == PassaiLogoVariant.text) {
       return Text(
         'PASSAÍ',
-        style: GoogleFonts.jua(
+        style: TextStyle(
+          fontFamily: 'Jua',
+          fontFamilyFallback: const ['Outfit', 'Manrope'],
           fontSize: h * 0.88,
           letterSpacing: 1.0,
           color: effectiveColor,
@@ -208,11 +213,13 @@ class PassaiVanIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     // Proporção oficial do vetor original (largura 438, altura 275)
     final width = height * (438.0 / 275.0);
-    return SizedBox(
-      width: width,
-      height: height,
-      child: CustomPaint(
-        painter: PassaiVanPainter(color: color),
+    return RepaintBoundary(
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: CustomPaint(
+          painter: PassaiVanPainter(color: color),
+        ),
       ),
     );
   }

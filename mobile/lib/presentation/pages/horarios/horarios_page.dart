@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:passai/core/theme/app_colors.dart';
@@ -63,6 +64,7 @@ class _HorariosPageState extends ConsumerState<HorariosPage> {
         body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () async {
+          HapticFeedback.lightImpact();
           ref.invalidate(horariosProvider(params));
           try {
             await ref.read(horariosProvider(params).future);
@@ -249,7 +251,11 @@ class _SentidoButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -287,24 +293,40 @@ class _HorariosList extends StatelessWidget {
     // Conta horários alterados para o banner informativo
     final numAlterados = horarios.where((h) => h.alterado).length;
 
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 32 + bottomPadding),
       sliver: SliverList(
-        delegate: SliverChildListDelegate([
-          // Banner de aviso quando há alterações no dia
-          if (numAlterados > 0)
-            _AlteracaoBanner(quantidade: numAlterados),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (numAlterados > 0) {
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _AlteracaoBanner(quantidade: numAlterados),
+                );
+              }
+              final horario = horarios[index - 1];
+              return Padding(
+                key: ValueKey(horario.id),
+                padding: const EdgeInsets.only(bottom: 10),
+                child: RepaintBoundary(
+                  child: HorarioTile(horario: horario),
+                ),
+              );
+            }
 
-          const SizedBox(height: 12),
-
-          ...List.generate(horarios.length, (index) {
+            final horario = horarios[index];
             return Padding(
-              key: ValueKey(horarios[index].id),
+              key: ValueKey(horario.id),
               padding: const EdgeInsets.only(bottom: 10),
-              child: HorarioTile(horario: horarios[index]),
+              child: RepaintBoundary(
+                child: HorarioTile(horario: horario),
+              ),
             );
-          }),
-        ]),
+          },
+          childCount: numAlterados > 0 ? horarios.length + 1 : horarios.length,
+        ),
       ),
     );
   }

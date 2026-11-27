@@ -14,9 +14,15 @@ final rotasRemoteDatasourceProvider = Provider<RotasRemoteDatasource>(
   (_) => RotasRemoteDatasource(),
 );
 
-/// Repositório concreto
-final rotasRepositoryProvider = Provider<RotasRepository>(
+/// Repositório concreto — exposto como [RotasRepositoryImpl] para permitir
+/// acesso ao método [limparCache] no pull-to-refresh sem query dupla.
+final rotasRepositoryImplProvider = Provider<RotasRepositoryImpl>(
   (ref) => RotasRepositoryImpl(ref.watch(rotasRemoteDatasourceProvider)),
+);
+
+/// Repositório pela interface de domínio (uso geral)
+final rotasRepositoryProvider = Provider<RotasRepository>(
+  (ref) => ref.watch(rotasRepositoryImplProvider),
 );
 
 /// Use case de busca de rotas
@@ -28,22 +34,23 @@ final buscarRotasUsecaseProvider = Provider<BuscarRotas>(
 // Providers de estado
 // ---------------------------------------------------------------------------
 
-/// Lista de todas as cidades disponíveis (carga inicial / fallback)
+/// Lista de todas as rotas ativas — carregada uma única vez e cacheada em memória.
+/// [cidadesProvider] e [cidadesConectadasProvider] derivam deste provider,
+/// eliminando o double-fetch ao Supabase na inicialização da Home.
+final todasAsRotasProvider = FutureProvider<List<Rota>>((ref) {
+  return ref.watch(rotasRepositoryProvider).buscarTodasAsRotas();
+});
+
+/// Lista de cidades disponíveis — derivada de [todasAsRotasProvider] via cache.
+/// Não faz query extra ao banco quando as rotas já estiverem carregadas.
 final cidadesProvider = FutureProvider<List<String>>((ref) {
   return ref.watch(rotasRepositoryProvider).buscarCidades();
 });
 
-/// Busca reativa de cidades por termo — usado pelo autocomplete.
-/// Usa FutureProvider.family para que cada termo tenha seu próprio cache.
-/// O índice trigram (migration 003) torna a busca eficiente no banco.
+/// Busca reativa de cidades por termo — usado pelo autocomplete
 final cidadesPorTermoProvider =
     FutureProvider.family<List<String>, String>((ref, termo) {
   return ref.watch(rotasRepositoryProvider).buscarCidades(termo: termo);
-});
-
-/// Lista de todas as rotas ativas (para a seção de rotas disponíveis)
-final todasAsRotasProvider = FutureProvider<List<Rota>>((ref) {
-  return ref.watch(rotasRepositoryProvider).buscarTodasAsRotas();
 });
 
 /// Retorna as cidades diretamente conectadas a uma [cidadeBase] por rotas ativas.
@@ -103,15 +110,9 @@ final rotasBuscadasComSentidoProvider =
       );
 });
 
-/// Resultado da busca de rotas (origem → destino)
-final rotasBuscadasProvider = FutureProvider<List<Rota>>((ref) async {
-  final origem = ref.watch(origemSelecionadaProvider);
-  final destino = ref.watch(destinoSelecionadoProvider);
-
-  if (origem == null || destino == null) return [];
-
-  return ref.watch(buscarRotasUsecaseProvider).call(
-        origem: origem,
-        destino: destino,
-      );
+/// Resultado da busca de rotas (origem → destino) — derivado sem fetch extra.
+/// Extraído de [rotasBuscadasComSentidoProvider] para evitar chamada duplicada ao banco.
+final rotasBuscadasProvider = Provider<List<Rota>>((ref) {
+  final resultados = ref.watch(rotasBuscadasComSentidoProvider).valueOrNull ?? const <RotaSearchResult>[];
+  return resultados.map((r) => r.rota).toList();
 });
